@@ -1,0 +1,31 @@
+def load_configs(configs):
+	arg_dict = {}
+	dataset = configs.get('dataset')
+	assert isinstance(dataset['train_file'], str)
+	assert isinstance(dataset['val_file'], str)
+	assert isinstance(dataset['topics'], str)
+	arg_dict['train_file'] = dataset['train_file']
+	arg_dict['val_file'] = dataset['val_file']
+	arg_dict['topics'] = dataset['topics']
+
+	parameters = configs.get('parameters')
+	assert isinstance(parameters['n_labels'], int)
+	assert isinstance(parameters['lr'], float)
+	assert isinstance(parameters['epochs'], int)
+	assert isinstance(parameters['batch_size'], int)
+	assert isinstance(parameters['max_length'], int)
+	assert isinstance(parameters['dropout'], float)
+	assert isinstance(parameters['threshold'], float)
+
+	arg_dict['n_labels'] = parameters['n_labels']
+	arg_dict['lr'] = parameters['lr']
+	arg_dict['epochs'] = parameters['epochs']
+	arg_dict['batch_size'] = parameters['batch_size']
+	arg_dict['max_length'] = parameters['max_length']
+	arg_dict['dropout'] = parameters['dropout']
+	arg_dict['threshold'] = parameters['threshold']
+
+	assert isinstance(configs.get('pretrained_model'), str)
+	arg_dict['pretrained_model'] = configs.get('pretrained_model')
+
+	return arg_dict
