@@ -5,11 +5,11 @@ from load_configurations import load_configs
 
 
 class TransformerModel(torch.nn.Module):
-	def __init__(self, configs):
+	def __init__(self, config):
 		super(TransformerModel, self).__init__()
-		self.l1 = AutoModel.from_pretrained(configs["pretrained_model"])
-		self.dropout = torch.nn.Dropout(configs["dropout"])
-		self.linear = torch.nn.Linear(self.l1.config.hidden_size, configs['n_labels'])
+		self.l1 = AutoModel.from_pretrained(config["pretrained_model"])
+		self.dropout = torch.nn.Dropout(config["dropout"])
+		self.linear = torch.nn.Linear(self.l1.config.hidden_size, config['n_labels'])
 
 	def forward(self, ids, mask):
 		_, output_1 = self.l1(ids, attention_mask=mask)
