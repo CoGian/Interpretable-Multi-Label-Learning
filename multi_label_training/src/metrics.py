@@ -78,10 +78,10 @@ class Metrics(object):
 
 	def reset(self):
 		"""
-		Reset losses and metrics and the end of an epoch
+		Reset losses and metrics at the end of an epoch
 		"""
 		self.steps = dict(train=0, validation=0)
-		self.micro_f1 = dict(train=0, validation=0)
 		self.loss_metric = dict(train=0, validation=0)
+		self.micro_f1 = dict(train=0, validation=0)
 		self.micro_recall = dict(train=0, validation=0)
 		self.micro_precision = dict(train=0, validation=0)

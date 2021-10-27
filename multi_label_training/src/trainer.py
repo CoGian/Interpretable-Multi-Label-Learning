@@ -3,7 +3,7 @@ from multi_label_training.src.model import BertForMultiLabelSequenceClassificati
 from multi_label_training.src.metrics import Metrics
 from multi_label_training.src.report import Report
 from multi_label_training.src.checkpoint import Checkpoint
-
+from transformers import set_seed
 
 class Trainer(object):
 
@@ -24,6 +24,7 @@ class Trainer(object):
         self.report = Report(config, self.metrics)
         self.checkpoint = Checkpoint(config, self.model, self.optimizer)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        set_seed(44)
 
     def loss_fn(self, outputs, targets):
         return torch.nn.BCELoss(reduction="sum")(outputs, targets) / targets.size()[0]
