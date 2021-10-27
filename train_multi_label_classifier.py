@@ -1,11 +1,11 @@
 import yaml
-from src.load_configurations import load_configs
-from src.dataset import LitCovidDataset, get_dataloader
-from src.trainer import Trainer
+from multi_label_training.src.load_configurations import load_configs
+from multi_label_training.src.dataset import LitCovidDataset, get_dataloader
+from multi_label_training.src.trainer import Trainer
 from transformers import AutoTokenizer
 
 if __name__ == '__main__':
-	with open('./configs/LitCovid_configs.yml', 'r') as config_file:
+	with open('multi_label_training/configs/LitCovid_configs.yml', 'r') as config_file:
 		configs = yaml.load(config_file, Loader=yaml.FullLoader)
 	config = load_configs(configs)
 

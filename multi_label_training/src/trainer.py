@@ -1,8 +1,8 @@
 import torch
-from model import TransformerModel
-from metrics import Metrics
-from report import Report
-from checkpoint import Checkpoint
+from multi_label_training.src.model import BertForMultiLabelSequenceClassification
+from multi_label_training.src.metrics import Metrics
+from multi_label_training.src.report import Report
+from multi_label_training.src.checkpoint import Checkpoint
 
 
 class Trainer(object):
@@ -16,7 +16,8 @@ class Trainer(object):
         self.early_stopping_counter = 0
         self.train_dataloader = train_dataloader
         self.validation_dataloader = validation_dataloader
-        self.model = TransformerModel(self.config)
+        self.model = BertForMultiLabelSequenceClassification.from_pretrained(config["pretrained_model"],
+                                                                             num_labels=config["n_labels"])
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.config['lr'])
         self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.9)
         self.metrics = Metrics(config)
@@ -25,7 +26,7 @@ class Trainer(object):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def loss_fn(self, outputs, targets):
-        return torch.nn.BCELoss(reduction="sum")(outputs, targets) / targets.labels.size()[0]
+        return torch.nn.BCELoss(reduction="sum")(outputs, targets) / targets.size()[0]
 
     def train(self):
 
@@ -62,29 +63,30 @@ class Trainer(object):
             self.report.report_wandb(epoch, current_lr)
             self.metrics.reset()
 
-    def train_step(self, data):
+    def forward_pass(self, data):
         ids = data['ids'].to(self.device)
         mask = data['mask'].to(self.device)
         targets = data['targets'].to(self.device)
 
-        outputs = self.model(ids, mask)
+        outputs = self.model(ids, mask, labels=targets)
+
+        loss = outputs.loss
+        logits = outputs.logits
+        return loss, logits, targets
+
+    def train_step(self, data):
+
+        loss, logits, targets = self.forward_pass(data)
 
         self.optimizer.zero_grad()
-        loss = self.loss_fn(outputs, targets).item()
         loss.backward()
         self.optimizer.step()
-        self.metrics.update_metrics(outputs, targets, loss)
+        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss)
 
     @torch.no_grad()
     def validation_step(self, data):
-        ids = data['ids'].to(self.device)
-        mask = data['mask'].to(self.device)
-        targets = data['targets'].to(self.device)
-
-        outputs = self.model(ids, mask)
-
-        loss = self.loss_fn(outputs, targets).item()
-        self.metrics.update_metrics(outputs, targets, loss, mode="validation")
+        loss, logits, targets = self.forward_pass(data)
+        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss, mode="validation")
 
 
 

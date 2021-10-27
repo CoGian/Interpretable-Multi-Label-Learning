@@ -28,6 +28,12 @@ def load_configs(configs):
 	assert isinstance(configs.get('pretrained_model'), str)
 	arg_dict['pretrained_model'] = configs.get('pretrained_model')
 
+	logging = configs.get('logging')
+	assert isinstance(logging.get('project'), str)
+	assert isinstance(logging.get('logger_file'), str)
+	arg_dict['project'] = logging.get('project')
+	arg_dict['logger_file'] = logging.get('logger_file')
+
 	checkpoint = configs.get('checkpoint')
 	assert isinstance(checkpoint.get('folder'), str)
 	assert isinstance(checkpoint.get('subfolder'), str)

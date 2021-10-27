@@ -1,7 +1,7 @@
 dataset:
-  train_file: ../Datasets/LitCovid/BC7-LitCovid-Train.csv
-  val_file: ../Datasets/LitCovid/BC7-LitCovid-Dev.csv
-  topics: ../Datasets/LitCovid/topics.json
+  train_file: Datasets/LitCovid/BC7-LitCovid-Train.csv
+  val_file: Datasets/LitCovid/BC7-LitCovid-Dev.csv
+  topics: Datasets/LitCovid/topics.json
 parameters:
   n_labels: 7
   lr: 0.002
@@ -12,8 +12,8 @@ parameters:
   threshold: 0.5
 pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
 logging:
-  project: LitCovid
-  logger_file: ncbi_bert_pubmed
+  project: ncbi_bert_pubmed
+  logger_file: LitCovid
 checkpoint:
   folder: LitCovid_models
   subfolder: LitCovid_ncbi_bert_pubmed
