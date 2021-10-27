@@ -24,17 +24,9 @@ class Checkpoint(object):
 			self.checkpoint_validation_loss = validation_loss
 			self.checkpoint_validation_micro_f1 = validation_micro_f1
 
-			checkpoint = {
-				'epoch': epoch,
-				'validation_loss': validation_loss,
-				'validation_micro_f1': validation_micro_f1,
-				'optimizer_state': self.optimizer.state_dict(),
-				'model_state': self.model.state_dict()
-			}
-
 			if not os.path.exists(os.path.abspath(self.checkpoint_dir)):
 				os.makedirs(os.path.abspath(self.checkpoint_dir))
 
-			checkpoint_name = f'model-epoch={epoch}-validation_loss={validation_loss}-validation_micro_f1={validation_micro_f1}.pt'
+			checkpoint_name = f'model-epoch={epoch}-validation_loss={validation_loss}-validation_micro_f1={validation_micro_f1}'
 			checkpoint_to_save_path = os.path.join(os.path.abspath(self.checkpoint_dir), checkpoint_name)
-			torch.save(checkpoint, checkpoint_to_save_path)
+			self.model.save_pretrained(checkpoint_to_save_path)
