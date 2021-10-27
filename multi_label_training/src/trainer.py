@@ -46,7 +46,7 @@ class Trainer(object):
                 if batch_idx % 50 == 0:
                     self.report.report_progress_bar(epoch, mode="validation")
 
-            self.scheduler.step(epoch)
+            self.scheduler.step()
             current_lr = self.scheduler.get_last_lr()[0]
             validation_loss, validation_micro_f1 = self.metrics.compute_loss_and_micro_f1('validation')
 
