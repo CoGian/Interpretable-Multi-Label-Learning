@@ -34,9 +34,9 @@ class Report(object):
         if self.wandb_writer is None:
             return
 
-        train_loss, train_micro_f1, train_micro_precision, train_micro_recall, train_precision_at_k =\
+        train_loss, train_micro_f1, train_micro_precision, train_micro_recall =\
             self.metrics.compute_epoch_metrics(mode='train')
-        validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall, val_precision_at =\
+        validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall =\
             self.metrics.compute_epoch_metrics(mode='validation')
 
         log_dir = {
