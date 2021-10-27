@@ -1,7 +1,5 @@
 import torch
-import yaml
 from transformers import AutoModel
-from load_configurations import load_configs
 
 
 class TransformerModel(torch.nn.Module):
@@ -19,9 +17,3 @@ class TransformerModel(torch.nn.Module):
 		return output
 
 
-if __name__ == '__main__':
-	with open('../configs/LitCovid_configs.yml', 'r') as config_file:
-		configs = yaml.load(config_file, Loader=yaml.FullLoader)
-	configs = load_configs(configs)
-	model = TransformerModel(configs)
-	print(model)

@@ -5,3 +5,5 @@ sklearn==0.0
 scikit-learn==1.0.1
 nltk==3.6.5
 transformers==4.11.3
+PyYAML==6.0
+tqdm==4.62.3
