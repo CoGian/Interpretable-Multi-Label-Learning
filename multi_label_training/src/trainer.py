@@ -81,12 +81,12 @@ class Trainer(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss)
+        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss.item())
 
     @torch.no_grad()
     def validation_step(self, data):
         loss, logits, targets = self.forward_pass(data)
-        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss, mode="validation")
+        self.metrics.update_metrics(torch.sigmoid(logits), targets, loss.item(), mode="validation")
 
 
 

@@ -4,9 +4,9 @@ dataset:
   topics: Datasets/LitCovid/topics.json
 parameters:
   n_labels: 7
-  lr: 0.0002
+  lr: 0.002
   epochs: 10
-  batch_size: 64
+  batch_size: 32
   max_length: 248
   dropout: 0.1
   threshold: 0.5
