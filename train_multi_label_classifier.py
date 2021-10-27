@@ -2,13 +2,14 @@ import yaml
 from multi_label_training.src.load_configurations import load_configs
 from multi_label_training.src.dataset import LitCovidDataset, get_dataloader
 from multi_label_training.src.trainer import Trainer
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, set_seed
 
 if __name__ == '__main__':
 	with open('multi_label_training/configs/LitCovid_configs.yml', 'r') as config_file:
 		configs = yaml.load(config_file, Loader=yaml.FullLoader)
 	config = load_configs(configs)
 
+	set_seed(44)
 	tokenizer = AutoTokenizer.from_pretrained(config["pretrained_model"])
 	train_dataset = LitCovidDataset(
 		config["train_file"],
