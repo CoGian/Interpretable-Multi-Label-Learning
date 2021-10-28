@@ -13,7 +13,6 @@ class Trainer(object):
                  validation_dataloader):
 
         self.config = config
-        self.early_stopping_counter = 0
         self.train_dataloader = train_dataloader
         self.validation_dataloader = validation_dataloader
         self.model = BertForMultiLabelSequenceClassification.from_pretrained(config["pretrained_model"],
@@ -49,12 +48,6 @@ class Trainer(object):
             self.scheduler.step()
             current_lr = self.scheduler.get_last_lr()[0]
             validation_loss, validation_micro_f1 = self.metrics.compute_loss_and_micro_f1('validation')
-
-            if validation_loss > self.metrics.best_validation_loss \
-                    and validation_micro_f1 < self.metrics.best_validation_micro_f1:
-                self.early_stopping_counter = self.early_stopping_counter + 1
-            else:
-                self.early_stopping_counter = 0
 
             self.checkpoint.maybe_save_checkpoint(epoch, validation_loss, validation_micro_f1)
             self.report.report_wandb(epoch, current_lr)
