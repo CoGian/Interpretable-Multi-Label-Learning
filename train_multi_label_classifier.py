@@ -2,7 +2,7 @@ import argparse
 
 import yaml
 from multi_label_training.src.load_configurations import load_configs
-from multi_label_training.src.dataset import LitCovidDataset, get_dataloader
+from multi_label_training.src.dataset import LitCovidDataset, get_dataloader, HoCDataset
 from multi_label_training.src.trainer import Trainer
 from transformers import AutoTokenizer, set_seed
 
@@ -18,18 +18,35 @@ if __name__ == '__main__':
 
 	set_seed(44)
 	tokenizer = AutoTokenizer.from_pretrained(config["pretrained_model"])
-	train_dataset = LitCovidDataset(
-		config["train_file"],
-		config["topics"],
-		tokenizer,
-		config["max_length"]
-	)
-	validation_dataset = LitCovidDataset(
-		config["val_file"],
-		config["topics"],
-		tokenizer,
-		config["max_length"]
-	)
+
+	if config["logger_file"] == "LitCovid":
+		train_dataset = LitCovidDataset(
+			config["train_file"],
+			config["topics"],
+			tokenizer,
+			config["max_length"]
+		)
+		validation_dataset = LitCovidDataset(
+			config["val_file"],
+			config["topics"],
+			tokenizer,
+			config["max_length"]
+		)
+	elif config["logger_file"] == "HoC":
+		train_dataset = HoCDataset(
+			config["train_file"],
+			config["topics"],
+			tokenizer,
+			config["max_length"]
+		)
+		validation_dataset = HoCDataset(
+			config["val_file"],
+			config["topics"],
+			tokenizer,
+			config["max_length"]
+		)
+	else:
+		exit()
 
 	train_dataloader = get_dataloader(train_dataset, config["batch_size"], True)
 	validation_dataloader = get_dataloader(validation_dataset, config["batch_size"], False)
