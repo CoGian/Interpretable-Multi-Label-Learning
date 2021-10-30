@@ -7,9 +7,7 @@ class Checkpoint(object):
 
 	def __init__(self, config, model, optimizer):
 		self.config = config
-		self.initial_epoch = 1
-		self.checkpoint_file = config['checkpoint_subfolder']
-		self.checkpoint_dir = config['checkpoint_folder']
+		self.checkpoint_dir = os.path.join(config['checkpoint_folder'], config['checkpoint_subfolder'])
 		self.optimizer = optimizer
 		self.model = model
 		self.checkpoint_validation_micro_f1 = sys.float_info.min

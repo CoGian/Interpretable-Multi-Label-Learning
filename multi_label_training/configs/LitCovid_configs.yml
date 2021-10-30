@@ -7,7 +7,7 @@ parameters:
   lr: 0.00002
   epochs: 10
   batch_size: 32
-  max_length: 248
+  max_length: 256
   dropout: 0.1
   threshold: 0.5
 pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12

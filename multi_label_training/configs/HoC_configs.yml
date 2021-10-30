@@ -1,0 +1,19 @@
+dataset:
+  train_file: Datasets/HoC/train.json
+  val_file: Datasets/HoC/val.json
+  topics: Datasets/HoC/topics.json
+parameters:
+  n_labels: 37
+  lr: 0.00002
+  epochs: 10
+  batch_size: 32
+  max_length: 256
+  dropout: 0.1
+  threshold: 0.5
+pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
+logging:
+  project: ncbi_bert_pubmed
+  logger_file: HoC
+checkpoint:
+  folder: HoC_models
+  subfolder: HoC_ncbi_bert_pubmed

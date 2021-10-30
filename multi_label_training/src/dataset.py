@@ -29,14 +29,52 @@ class LitCovidDataset(Dataset):
         title = row.title.strip()
         abstract = row.abstract.strip()
         text = title + ". " + abstract
-        text = text.lower()
-        text = re.sub(r'[\r\n]+', ' ', text)
-        text = re.sub(r'[^\x00-\x7F]+', ' ', text)
-        tokenized = TreebankWordTokenizer().tokenize(text)
-        text = ' '.join(tokenized)
-        text = re.sub(r"\s's\b", "'s", text)
+        text = preprocess_text(text)
 
         labels = row.label.split(";")
+        labels = self.mlb.transform([labels])
+
+        inputs = self.tokenizer.encode_plus(
+            text,
+            None,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            padding='max_length',
+            return_token_type_ids=True,
+            truncation=True,
+            return_tensors="pt"
+        )
+
+        return {
+            'ids': inputs['input_ids'].flatten(),
+            'mask': inputs['attention_mask'].flatten(),
+            'targets': torch.FloatTensor(labels[0])
+        }
+
+
+class HoCDataset(Dataset):
+
+    def __init__(self, json_file, topics_file, tokenizer, max_len):
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+        self.dataset = pd.read_json(json_file)
+        self.topics = []
+        with open(topics_file, "r") as f:
+            for label in f.readlines():
+                self.topics.append(label.strip())
+        self.mlb = preprocessing.MultiLabelBinarizer()
+        self.mlb.fit([self.topics])
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+        row = self.dataset.iloc[index]
+
+        text = row.text.strip()
+        text = preprocess_text(text)
+
+        labels = row.labels
         labels = self.mlb.transform([labels])
 
         inputs = self.tokenizer.encode_plus(
@@ -64,14 +102,24 @@ def get_dataloader(dataset, batch_size, shuffle=True):
                       shuffle=shuffle)
 
 
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r'[\r\n]+', ' ', text)
+    text = re.sub(r'[^\x00-\x7F]+', ' ', text)
+    tokenized = TreebankWordTokenizer().tokenize(text)
+    text = ' '.join(tokenized)
+    text = re.sub(r"\s's\b", "'s", text)
+    return text
+
+
 if __name__ == '__main__':
 
     temp_tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
-    train_dataset = LitCovidDataset(
-        "../../Datasets/LitCovid/BC7-LitCovid-Train.csv",
-        "../../Datasets/LitCovid/topics.json",
+    train_dataset = HoCDataset(
+        "../../Datasets/HoC/train.json",
+        "../../Datasets/HoC/topics.json",
         temp_tokenizer,
-        248
+        256
         )
     train_dataloader = get_dataloader(train_dataset, 2, False)
 

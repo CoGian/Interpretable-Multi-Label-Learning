@@ -1,3 +1,5 @@
+import argparse
+
 import yaml
 from multi_label_training.src.load_configurations import load_configs
 from multi_label_training.src.dataset import LitCovidDataset, get_dataloader
@@ -5,7 +7,12 @@ from multi_label_training.src.trainer import Trainer
 from transformers import AutoTokenizer, set_seed
 
 if __name__ == '__main__':
-	with open('multi_label_training/configs/LitCovid_configs.yml', 'r') as config_file:
+	parser = argparse.ArgumentParser()
+	parser.add_argument(
+		'--configs_path', '-cp', help='The path of the configuration file')
+	args = parser.parse_args()
+	configs_file = args.configs_path
+	with open(configs_file, 'r') as config_file:
 		configs = yaml.load(config_file, Loader=yaml.FullLoader)
 	config = load_configs(configs)
 
