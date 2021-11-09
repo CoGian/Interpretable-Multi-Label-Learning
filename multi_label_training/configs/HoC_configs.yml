@@ -5,8 +5,8 @@ dataset:
 parameters:
   n_labels: 10
   lr: 0.00002
-  epochs: 10
-  batch_size: 8
+  epochs: 30
+  batch_size: 4
   max_length: 256
   dropout: 0.1
   threshold: 0.5
