@@ -50,7 +50,7 @@ if __name__ == '__main__':
 												 attention_mask=attention_mask,
 												 start_layer=0)
 
-		indexes = [i for i, j in enumerate(torch.sigmoid(output).detach().numpy()[0]) if j >= .5]
+		indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
 
 
 		for i, output_index in enumerate(indexes):
