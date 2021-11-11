@@ -27,7 +27,7 @@ class Generator:
         output = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
         kwargs = {"alpha": 1}
 
-        indexes = [i for i, j in enumerate(torch.sigmoid(output).detach().numpy()[0]) if j >= .5]
+        indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
 
         explanations = []
 
