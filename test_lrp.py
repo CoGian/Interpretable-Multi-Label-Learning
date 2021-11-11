@@ -6,7 +6,6 @@ from LRP_BERT_explainability.BERT.BertForMultiLabelSequenceClassification import
 from LRP_BERT_explainability.ExplanationGenerator import Generator
 from sklearn import preprocessing
 import numpy as np
-from multi_label_training.src.dataset import preprocess_text
 import torch
 from tqdm import tqdm
 
@@ -38,7 +37,10 @@ if __name__ == '__main__':
 	fn = 0
 
 	for item in tqdm(val_dataset):
-		text = preprocess_text(item["text"])
+
+		if item["pmid"] != "12204665":
+			continue
+		text = item["text"].lower()
 		text = re.sub(r'(\w)\.', r'\g<1>,', text)
 		encoding = tokenizer([text], return_tensors='pt')
 		input_ids = encoding['input_ids'].to(device)
