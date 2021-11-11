@@ -38,11 +38,9 @@ if __name__ == '__main__':
 
 	for item in tqdm(val_dataset):
 
-		if item["pmid"] != "12204665":
-			continue
 		text = item["text"].lower()
 		text = re.sub(r'(\w)\.', r'\g<1>,', text)
-		encoding = tokenizer([text], return_tensors='pt', truncate=True)
+		encoding = tokenizer([text], return_tensors='pt', max_length=512, truncation=True)
 		input_ids = encoding['input_ids'].to(device)
 		attention_mask = encoding['attention_mask'].to(device)
 		gold_labels = mlb.transform([item["labels"]])[0]
