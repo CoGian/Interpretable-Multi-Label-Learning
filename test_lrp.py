@@ -49,40 +49,42 @@ if __name__ == '__main__':
 		expl, output, indexes = explanations.generate_LRP(input_ids=input_ids,
 												 attention_mask=attention_mask,
 												 start_layer=0)
+		try:
+			for i, output_index in enumerate(indexes):
+				if output_index not in gold_indexes:
+					continue
+				sentences_expl = []
+				sent_expl = []
+				for index, id in enumerate(input_ids[0]):
+					sent_expl.append(expl[i][index].cpu().detach().numpy())
+					if id.cpu().detach().numpy() == 1012:
+						sentences_expl.append(sent_expl)
+						sent_expl = []
+				sent_scores = []
+				for sent_expl in sentences_expl:
+					sent_scores.append(np.mean(sent_expl))
 
-		for i, output_index in enumerate(indexes):
-			if output_index not in gold_indexes:
-				continue
-			sentences_expl = []
-			sent_expl = []
-			for index, id in enumerate(input_ids[0]):
-				sent_expl.append(expl[i][index].cpu().detach().numpy())
-				if id.cpu().detach().numpy() == 1012:
-					sentences_expl.append(sent_expl)
-					sent_expl = []
-			sent_scores = []
-			for sent_expl in sentences_expl:
-				sent_scores.append(np.mean(sent_expl))
+				sent_scores = np.array(sent_scores)
+				sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
 
-			sent_scores = np.array(sent_scores)
-			sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
+				one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
+				one_hot[0, output_index] = 1
 
-			one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
-			one_hot[0, output_index] = 1
+				gold_label = mlb.inverse_transform(one_hot)[0][0]
 
-			gold_label = mlb.inverse_transform(one_hot)[0][0]
-
-			for index, score in enumerate(sent_scores):
-				if score > 0.8:
-					if gold_label in item["labels_per_sentence"][index]:
-						tp += 1
+				for index, score in enumerate(sent_scores):
+					if score > 0.8:
+						if gold_label in item["labels_per_sentence"][index]:
+							tp += 1
+						else:
+							fp += 1
 					else:
-						fp += 1
-				else:
-					if gold_label in item["labels_per_sentence"][index]:
-						fn += 1
-					else:
-						tn += 1
+						if gold_label in item["labels_per_sentence"][index]:
+							fn += 1
+						else:
+							tn += 1
+		except IndexError:
+			print(item["pmid"])
 
 		print("tp", tp)
 		print("fp", fp)
