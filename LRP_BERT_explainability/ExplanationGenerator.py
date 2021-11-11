@@ -60,4 +60,4 @@ class Generator:
             explanation = rollout[:, 0][0]
             norm_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
             explanations.append(norm_explanation)
-        return explanations, output
+        return explanations, output, indexes

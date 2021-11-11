@@ -46,12 +46,9 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		expl, output = explanations.generate_LRP(input_ids=input_ids,
+		expl, output, indexes = explanations.generate_LRP(input_ids=input_ids,
 												 attention_mask=attention_mask,
 												 start_layer=0)
-
-		indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
-
 
 		for i, output_index in enumerate(indexes):
 			if output_index not in gold_indexes:
