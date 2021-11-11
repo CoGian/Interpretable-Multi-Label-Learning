@@ -57,7 +57,7 @@ if __name__ == '__main__':
 			sent_expl = []
 			for index, id in enumerate(input_ids[0]):
 				sent_expl.append(expl[i][index].cpu().detach().numpy())
-				if id.detach().numpy() == 1012:
+				if id.cpu().detach().numpy() == 1012:
 					sentences_expl.append(sent_expl)
 					sent_expl = []
 			sent_scores = []
