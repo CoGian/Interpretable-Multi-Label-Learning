@@ -74,7 +74,7 @@ if __name__ == '__main__':
 				gold_label = mlb.inverse_transform(one_hot)[0][0]
 
 				for index, score in enumerate(sent_scores):
-					if score > 0.8:
+					if score > 0.9:
 						if gold_label in item["labels_per_sentence"][index]:
 							tp += 1
 						else:
@@ -91,4 +91,9 @@ if __name__ == '__main__':
 	print("fp", fp)
 	print("tn", tn)
 	print("fn", fn)
+	recall = tp / (tp+fn)
+	precision = tp / (tp+fp)
+	print("Recall: ", recall)
+	print("Precision: ", precision)
+	print("F1: ", (2*recall*precision)/(recall+precision))
 
