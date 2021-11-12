@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
 		text = item["text"].lower()
 		text = re.sub(r'(\S)\.', r'\g<1>,', text)
+		text = re.sub(r'\.(\S)', r',\g<1>', text)
 		encoding = tokenizer([text], return_tensors='pt', max_length=512, truncation=True)
 		input_ids = encoding['input_ids'].to(device)
 		attention_mask = encoding['attention_mask'].to(device)
@@ -84,10 +85,10 @@ if __name__ == '__main__':
 						else:
 							tn += 1
 		except IndexError:
-			print(item["pmid"])
+			print("4444 error for item: ", item["pmid"])
 
-		print("tp", tp)
-		print("fp", fp)
-		print("tn", tn)
-		print("fn", fn)
+	print("tp", tp)
+	print("fp", fp)
+	print("tn", tn)
+	print("fn", fn)
 
