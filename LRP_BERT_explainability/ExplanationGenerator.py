@@ -29,11 +29,11 @@ class Generator:
         output = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
         kwargs = {"alpha": 1}
 
-        indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
+        output_indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
 
         explanations = []
 
-        for index in indexes:
+        for index in output_indexes:
             one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
             one_hot[0, index] = 1
             one_hot_vector = one_hot
@@ -60,4 +60,4 @@ class Generator:
             explanation = rollout[:, 0][0]
             norm_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
             explanations.append(norm_explanation)
-        return explanations, output, indexes
+        return explanations, output, output_indexes

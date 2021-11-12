@@ -8,6 +8,7 @@ from sklearn import preprocessing
 import numpy as np
 import torch
 from tqdm import tqdm
+import pandas as pd
 
 if __name__ == '__main__':
 
@@ -35,7 +36,7 @@ if __name__ == '__main__':
 	fp = 0
 	tn = 0
 	fn = 0
-
+	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
 	for item in tqdm(val_dataset):
 
 		text = item["text"].lower()
@@ -47,11 +48,11 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		expl, output, indexes = explanations.generate_LRP(input_ids=input_ids,
-												 attention_mask=attention_mask,
-												 start_layer=0)
+		expl, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
+																 attention_mask=attention_mask,
+																 start_layer=0)
 		try:
-			for i, output_index in enumerate(indexes):
+			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
 					continue
 				sentences_expl = []
@@ -74,16 +75,20 @@ if __name__ == '__main__':
 				gold_label = mlb.inverse_transform(one_hot)[0][0]
 
 				for index, score in enumerate(sent_scores):
-					if score > 0.9:
+					if score > 0.95:
 						if gold_label in item["labels_per_sentence"][index]:
 							tp += 1
+							scores_per_label[gold_label]["tp"] += 1
 						else:
 							fp += 1
+							scores_per_label[gold_label]["fp"] += 1
 					else:
 						if gold_label in item["labels_per_sentence"][index]:
 							fn += 1
+							scores_per_label[gold_label]["fn"] += 1
 						else:
 							tn += 1
+							scores_per_label[gold_label]["tn"] += 1
 		except IndexError:
 			print("4444 error for item: ", item["pmid"])
 
@@ -95,5 +100,16 @@ if __name__ == '__main__':
 	precision = tp / (tp+fp)
 	print("Recall: ", recall)
 	print("Precision: ", precision)
-	print("F1: ", (2*recall*precision)/(recall+precision))
+	print("F1: ", (2*recall*precision)/(recall+precision)) #micro
+
+	metrics_per_labels = {}
+	for label in topics:
+		recall = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fn"])
+		precision = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fp"])
+		f1 = (2*recall*precision)/(recall+precision)
+		metrics_per_labels[label] = {"recall": recall, "precision": precision, "f1": f1}
+
+	with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+		print(pd.DataFrame(metrics_per_labels))
+
 
