@@ -75,7 +75,7 @@ if __name__ == '__main__':
 				gold_label = mlb.inverse_transform(one_hot)[0][0]
 
 				for index, score in enumerate(sent_scores):
-					if score > 0.95:
+					if score > 0.9:
 						if gold_label in item["labels_per_sentence"][index]:
 							tp += 1
 							scores_per_label[gold_label]["tp"] += 1
