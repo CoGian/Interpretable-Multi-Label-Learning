@@ -67,8 +67,7 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
         "Decode 'input_ids' to string using tokenizer"
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
-    @property
-    def predicted_labelset_indexes(self) -> list:
+    def predicted_labelset_indexes(self):
         "Returns predicted labelset indexes for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
@@ -126,7 +125,7 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
-        self.selected_indexes = self.predicted_labelset_indexes
+        self.selected_indexes = self.predicted_labelset_indexes()
 
         for index in self.selected_indexes:
             self.selected_index = index
