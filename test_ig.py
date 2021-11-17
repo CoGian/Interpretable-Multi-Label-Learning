@@ -43,7 +43,7 @@ if __name__ == '__main__':
         gold_labels = mlb.transform([item["labels"]])[0]
         gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-        word_attributions = multilabel_explainer(text=text, n_steps=1, internal_batch_size=4)
+        word_attributions = multilabel_explainer(text=text, n_steps=8, internal_batch_size=4)
 
         output_indexes = multilabel_explainer.selected_indexes
 
