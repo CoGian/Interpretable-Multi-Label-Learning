@@ -61,7 +61,7 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
         self.n_steps = 50
 
     def encode(self, text: str = None) -> list:
-        return self.tokenizer.encode(text, add_special_tokens=False)
+        return self.tokenizer.encode(text, add_special_tokens=False, max_length=512, truncation=True)
 
     def decode(self, input_ids: torch.Tensor) -> list:
         "Decode 'input_ids' to string using tokenizer"
@@ -211,6 +211,9 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
             self.n_steps = n_steps
         if internal_batch_size:
             self.internal_batch_size = internal_batch_size
+
+        self.attributions_list = []
+
         return self._run(text, embedding_type=embedding_type)
 
     def __str__(self):
