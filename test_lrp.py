@@ -48,9 +48,9 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		expl, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
-																 attention_mask=attention_mask,
-																 start_layer=0)
+		word_attributions, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
+																			  attention_mask=attention_mask,
+																			  start_layer=0)
 		try:
 			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
-					sent_expl.append(expl[i][index].cpu().detach().numpy())
+					sent_expl.append(word_attributions[i][index].cpu().detach().numpy())
 					if id.cpu().detach().numpy() == 1012:
 						sentences_expl.append(sent_expl)
 						sent_expl = []

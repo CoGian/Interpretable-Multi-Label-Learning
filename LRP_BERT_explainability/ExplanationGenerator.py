@@ -31,7 +31,7 @@ class Generator:
 
         output_indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
 
-        explanations = []
+        word_attributions = []
 
         for index in output_indexes:
             one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
@@ -59,5 +59,5 @@ class Generator:
             rollout[:, 0, 0] = 0
             explanation = rollout[:, 0][0]
             norm_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
-            explanations.append(norm_explanation)
-        return explanations, output, output_indexes
+            word_attributions.append(norm_explanation)
+        return word_attributions, output, output_indexes
