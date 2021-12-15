@@ -7,7 +7,7 @@ from nltk import TreebankWordTokenizer
 from transformers import AutoTokenizer
 
 
-class LitCovidDataset(Dataset):
+class CsvDataset(Dataset):
 
     def __init__(self, csv_file, topics_file, tokenizer, max_len):
         self.tokenizer = tokenizer
@@ -52,7 +52,7 @@ class LitCovidDataset(Dataset):
         }
 
 
-class HoCDataset(Dataset):
+class JsonDataset(Dataset):
 
     def __init__(self, json_file, topics_file, tokenizer, max_len):
         self.tokenizer = tokenizer
@@ -115,7 +115,7 @@ def preprocess_text(text):
 if __name__ == '__main__':
 
     temp_tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
-    train_dataset = HoCDataset(
+    train_dataset = JsonDataset(
         "../../Datasets/HoC/train.json",
         "../../Datasets/HoC/topics.json",
         temp_tokenizer,

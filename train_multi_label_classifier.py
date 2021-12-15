@@ -2,7 +2,7 @@ import argparse
 
 import yaml
 from multi_label_training.src.load_configurations import load_configs
-from multi_label_training.src.dataset import LitCovidDataset, get_dataloader, HoCDataset
+from multi_label_training.src.dataset import CsvDataset, get_dataloader, JsonDataset
 from multi_label_training.src.trainer import Trainer
 from transformers import AutoTokenizer, set_seed
 
@@ -20,26 +20,26 @@ if __name__ == '__main__':
 	tokenizer = AutoTokenizer.from_pretrained(config["pretrained_model"])
 
 	if config["logger_file"] == "LitCovid":
-		train_dataset = LitCovidDataset(
+		train_dataset = CsvDataset(
 			config["train_file"],
 			config["topics"],
 			tokenizer,
 			config["max_length"]
 		)
-		validation_dataset = LitCovidDataset(
+		validation_dataset = CsvDataset(
 			config["val_file"],
 			config["topics"],
 			tokenizer,
 			config["max_length"]
 		)
-	elif config["logger_file"] == "HoC":
-		train_dataset = HoCDataset(
+	elif config["logger_file"] == "HoC" or config["logger_file"] == "cei":
+		train_dataset = JsonDataset(
 			config["train_file"],
 			config["topics"],
 			tokenizer,
 			config["max_length"]
 		)
-		validation_dataset = HoCDataset(
+		validation_dataset = JsonDataset(
 			config["val_file"],
 			config["topics"],
 			tokenizer,
