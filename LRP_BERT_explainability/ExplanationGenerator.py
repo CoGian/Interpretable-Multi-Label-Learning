@@ -58,6 +58,6 @@ class Generator:
             rollout = compute_rollout_attention(cams, start_layer=start_layer)
             rollout[:, 0, 0] = 0
             explanation = rollout[:, 0][0]
-            norm_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
-            word_attributions.append(norm_explanation)
+            scaled_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
+            word_attributions.append(scaled_explanation)
         return word_attributions, output, output_indexes

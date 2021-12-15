@@ -1,14 +1,21 @@
+import argparse
+
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from IG_BERT_explainability.multi_label_sequence_classification import MultiLabelSequenceClassificationExplainer
 import json
 import re
 from sklearn import preprocessing
-import numpy as np
 import torch
 from tqdm import tqdm
-import pandas as pd
+from utils.metrics import update_sentence_metrics, print_metrics
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--threshold', '-t', help='The threshold of accepting a sentence as rationale')
+    args = parser.parse_args()
+    threshold = args.threshold
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -29,11 +36,9 @@ if __name__ == '__main__':
     with open("Datasets/HoC/val.json", "r") as fval:
         val_dataset = json.load(fval)
 
-    tp = 0
-    fp = 0
-    tn = 0
-    fn = 0
+    scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
     scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
+
     for item in tqdm(val_dataset):
 
         text = item["text"].lower()
@@ -43,7 +48,8 @@ if __name__ == '__main__':
         gold_labels = mlb.transform([item["labels"]])[0]
         gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-        word_attributions = multilabel_explainer(text=text, n_steps=8, internal_batch_size=4)
+        word_attributions_per_pred_class = multilabel_explainer(text=text, n_steps=1, internal_batch_size=1)
+
 
         output_indexes = multilabel_explainer.selected_indexes
 
@@ -53,58 +59,23 @@ if __name__ == '__main__':
                     continue
                 sentences_expl = []
                 sent_expl = []
-                for word in enumerate(word_attributions[i]):
+                for word in enumerate(word_attributions_per_pred_class[i]):
                     sent_expl.append(word[1][1])
                     if word[1][0] == ".":
                         sentences_expl.append(sent_expl)
                         sent_expl = []
 
-                sent_scores = []
-                for sent_expl in sentences_expl:
-                    sent_scores.append(np.mean(sent_expl))
-
-                sent_scores = np.array(sent_scores)
-                sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
-
-                one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
-                one_hot[0, output_index] = 1
-
-                gold_label = mlb.inverse_transform(one_hot)[0][0]
-
-                for index, score in enumerate(sent_scores):
-                    if score > 0.9:
-                        if gold_label in item["labels_per_sentence"][index]:
-                            tp += 1
-                            scores_per_label[gold_label]["tp"] += 1
-                        else:
-                            fp += 1
-                            scores_per_label[gold_label]["fp"] += 1
-                    else:
-                        if gold_label in item["labels_per_sentence"][index]:
-                            fn += 1
-                            scores_per_label[gold_label]["fn"] += 1
-                        else:
-                            tn += 1
-                            scores_per_label[gold_label]["tn"] += 1
+                update_sentence_metrics(
+                    sentences_expl,
+                    gold_labels,
+                    output_index,
+                    scores,
+                    scores_per_label,
+                    mlb,
+                    item,
+                    threshold
+                )
         except IndexError:
             print("4444 error for item: ", item["pmid"])
 
-    print("tp", tp)
-    print("fp", fp)
-    print("tn", tn)
-    print("fn", fn)
-    recall = tp / (tp+fn)
-    precision = tp / (tp+fp)
-    print("Recall: ", recall)
-    print("Precision: ", precision)
-    print("F1: ", (2*recall*precision)/(recall+precision)) #micro
-
-    metrics_per_labels = {}
-    for label in topics:
-        recall = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fn"])
-        precision = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fp"])
-        f1 = (2*recall*precision)/(recall+precision)
-        metrics_per_labels[label] = {"recall": recall, "precision": precision, "f1": f1}
-
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        print(pd.DataFrame(metrics_per_labels))
+    print_metrics(scores, scores_per_label, topics)

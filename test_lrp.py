@@ -1,16 +1,20 @@
+import argparse
 import json
 import re
-
 from transformers import AutoTokenizer
 from LRP_BERT_explainability.BERT.BertForMultiLabelSequenceClassification import BertForMultiLabelSequenceClassification
 from LRP_BERT_explainability.ExplanationGenerator import Generator
 from sklearn import preprocessing
-import numpy as np
 import torch
 from tqdm import tqdm
-import pandas as pd
+from utils.metrics import update_sentence_metrics, print_metrics
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument(
+		'--threshold', '-t', help='The threshold of accepting a sentence as rationale')
+	args = parser.parse_args()
+	threshold = args.threshold
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -32,11 +36,9 @@ if __name__ == '__main__':
 	with open("Datasets/HoC/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	tp = 0
-	fp = 0
-	tn = 0
-	fn = 0
+	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
 	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
+
 	for item in tqdm(val_dataset):
 
 		text = item["text"].lower()
@@ -48,9 +50,9 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		word_attributions, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
-																			  attention_mask=attention_mask,
-																			  start_layer=0)
+		word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
+																							 attention_mask=attention_mask,
+																							 start_layer=0)
 		try:
 			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
@@ -58,58 +60,23 @@ if __name__ == '__main__':
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
-					sent_expl.append(word_attributions[i][index].cpu().detach().numpy())
+					sent_expl.append(word_attributions_per_pred_class[i][index].cpu().detach().numpy())
 					if id.cpu().detach().numpy() == 1012:
 						sentences_expl.append(sent_expl)
 						sent_expl = []
-				sent_scores = []
-				for sent_expl in sentences_expl:
-					sent_scores.append(np.mean(sent_expl))
 
-				sent_scores = np.array(sent_scores)
-				sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
+				update_sentence_metrics(
+					sentences_expl,
+					gold_labels,
+					output_index,
+					scores,
+					scores_per_label,
+					mlb,
+					item,
+					threshold
+				)
 
-				one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
-				one_hot[0, output_index] = 1
-
-				gold_label = mlb.inverse_transform(one_hot)[0][0]
-
-				for index, score in enumerate(sent_scores):
-					if score > 0.9:
-						if gold_label in item["labels_per_sentence"][index]:
-							tp += 1
-							scores_per_label[gold_label]["tp"] += 1
-						else:
-							fp += 1
-							scores_per_label[gold_label]["fp"] += 1
-					else:
-						if gold_label in item["labels_per_sentence"][index]:
-							fn += 1
-							scores_per_label[gold_label]["fn"] += 1
-						else:
-							tn += 1
-							scores_per_label[gold_label]["tn"] += 1
 		except IndexError:
 			print("4444 error for item: ", item["pmid"])
 
-	print("tp", tp)
-	print("fp", fp)
-	print("tn", tn)
-	print("fn", fn)
-	recall = tp / (tp+fn)
-	precision = tp / (tp+fp)
-	print("Recall: ", recall)
-	print("Precision: ", precision)
-	print("F1: ", (2*recall*precision)/(recall+precision)) #micro
-
-	metrics_per_labels = {}
-	for label in topics:
-		recall = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fn"])
-		precision = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fp"])
-		f1 = (2*recall*precision)/(recall+precision)
-		metrics_per_labels[label] = {"recall": recall, "precision": precision, "f1": f1}
-
-	with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-		print(pd.DataFrame(metrics_per_labels))
-
-
+	print_metrics(scores, scores_per_label, topics)

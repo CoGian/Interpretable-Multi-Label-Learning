@@ -1,3 +1,4 @@
+import argparse
 import json
 import re
 
@@ -11,6 +12,11 @@ from tqdm import tqdm
 
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument(
+		'--threshold', '-t', help='The threshold of accepting a sentence as rationale')
+	args = parser.parse_args()
+	threshold = args.threshold
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -67,7 +73,8 @@ if __name__ == '__main__':
 					scores,
 					scores_per_label,
 					mlb,
-					item
+					item,
+					threshold
 				)
 		except IndexError:
 			print("4444 error for item: ", item["pmid"])

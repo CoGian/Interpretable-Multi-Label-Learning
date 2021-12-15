@@ -51,10 +51,8 @@ class RelPropSimple(RelProp):
         S = safe_divide(R, Z)
         C = self.gradprop(Z, self.X, S)
 
-        if torch.is_tensor(self.X) == False:
-            outputs = []
-            outputs.append(self.X[0] * C[0])
-            outputs.append(self.X[1] * C[1])
+        if not torch.is_tensor(self.X):
+            outputs = [self.X[0] * C[0], self.X[1] * C[1]]
         else:
             outputs = self.X * (C[0])
         return outputs

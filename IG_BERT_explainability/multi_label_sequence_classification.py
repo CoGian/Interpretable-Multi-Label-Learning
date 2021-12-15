@@ -1,6 +1,7 @@
 import warnings
 from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
@@ -79,11 +80,28 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
 
     @property
     def word_attributions(self) -> list:
-        "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
+        '''
+        Returns the scaled (0,1) word attributions for model and the text provided. Raises error if attributions not calculated.
+        :return: word_attributions
+        '''
+
         word_attributions_list = []
         for attributions in self.attributions_list:
             if attributions is not None:
-                word_attributions_list.append(attributions.word_attributions)
+                word_attributions = []
+                words = []
+                for word, value in attributions.word_attributions:
+
+                    if value < 0:
+                        word_attributions.append(0)
+                    else:
+                        word_attributions.append(value)
+                    words.append(word)
+                word_attributions = np.array(word_attributions)
+                scaled_word_attributions = (word_attributions - word_attributions.min()) / (word_attributions.max() - word_attributions.min())
+                word_attributions = [(word, value) for word, value in zip(words, scaled_word_attributions)]
+
+                word_attributions_list.append(word_attributions)
             else:
                 raise ValueError(
                     "Attributions have not yet been calculated. Please call the explainer on text first."
