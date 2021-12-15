@@ -12,7 +12,7 @@ from utils.metrics import update_sentence_metrics, print_metrics
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
-		'--threshold', '-t', help='The threshold of accepting a sentence as rationale')
+		'--threshold', '-t', help='The percentile threshold of accepting a sentence as rationale')
 	args = parser.parse_args()
 	threshold = int(args.threshold)
 
