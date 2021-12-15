@@ -5,7 +5,7 @@ import pandas as pd
 def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, scores_per_label, mlb, item, threshold=90):
 	sent_scores = []
 	for sent_expl in sentences_expl:
-		sent_scores.append(np.mean(sent_expl))
+		sent_scores.append(np.mean(np.sort(sent_expl)[-10:]))
 
 	sent_scores = np.array(sent_scores)
 	percentile_threshold = np.percentile(sent_scores, threshold)
