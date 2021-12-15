@@ -16,7 +16,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'--threshold', '-t', help='The threshold of accepting a sentence as rationale')
 	args = parser.parse_args()
-	threshold = args.threshold
+	threshold = int(args.threshold)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
