@@ -16,16 +16,17 @@ def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, s
 
 	gold_label = mlb.inverse_transform(one_hot)[0][0]
 
+	gold_label_check = gold_label.split("---")[0] + "--" + gold_label.split("---")[1]
 	for index, score in enumerate(scaled_sent_scores):
 		if score > threshold:
-			if gold_label.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label_check.lower() in item["labels_per_sentence"][index].lower():
 				scores['tp'] += 1
 				scores_per_label[gold_label]["tp"] += 1
 			else:
 				scores['fp'] += 1
 				scores_per_label[gold_label]["fp"] += 1
 		else:
-			if gold_label.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label_check.lower() in item["labels_per_sentence"][index].lower():
 				scores['fn'] += 1
 				scores_per_label[gold_label]["fn"] += 1
 			else:
