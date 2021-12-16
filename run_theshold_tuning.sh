@@ -1,8 +1,8 @@
 #!/bin/bash
 
-thresholds=(10 20 30 40 50 60 70 80 90)
+thresholds=(90 80 70 60 50 40 30 20 10)
 
 for threshold in ${thresholds[@]}; do
   echo Testing percentile threshold: $threshold -------------------------------
-  python test_ig.py -t $threshold
+  python test_lrp.py -t $threshold
 done

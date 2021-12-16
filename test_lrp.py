@@ -50,9 +50,14 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
+		try:
+			word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
 																							 attention_mask=attention_mask,
+
 																							 start_layer=0)
+		except RuntimeError:
+			print("RuntimeError error for item: ", item["pmid"])
+			continue
 		try:
 			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
@@ -77,6 +82,7 @@ if __name__ == '__main__':
 				)
 
 		except IndexError:
-			print("4444 error for item: ", item["pmid"])
+			print("IndexError error for item: ", item["pmid"])
+			continue
 
 	print_metrics(scores, scores_per_label, topics)
