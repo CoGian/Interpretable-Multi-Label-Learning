@@ -18,14 +18,14 @@ def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, s
 
 	for index, score in enumerate(scaled_sent_scores):
 		if score > threshold:
-			if gold_label in item["labels_per_sentence"][index]:
+			if gold_label in item["labels_per_sentence"][index].lower():
 				scores['tp'] += 1
 				scores_per_label[gold_label]["tp"] += 1
 			else:
 				scores['fp'] += 1
 				scores_per_label[gold_label]["fp"] += 1
 		else:
-			if gold_label in item["labels_per_sentence"][index]:
+			if gold_label in item["labels_per_sentence"][index].lower():
 				scores['fn'] += 1
 				scores_per_label[gold_label]["fn"] += 1
 			else:
