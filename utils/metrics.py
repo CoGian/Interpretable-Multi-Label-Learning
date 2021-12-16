@@ -8,14 +8,16 @@ def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, s
 		sent_scores.append(np.mean(np.sort(sent_expl)[-10:]))
 
 	sent_scores = np.array(sent_scores)
-	percentile_threshold = np.percentile(sent_scores, threshold)
+
+	scaled_sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
+	# percentile_threshold = np.percentile(sent_scores, threshold)
 	one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
 	one_hot[0, output_index] = 1
 
 	gold_label = mlb.inverse_transform(one_hot)[0][0]
 
-	for index, score in enumerate(sent_scores):
-		if score > percentile_threshold:
+	for index, score in enumerate(scaled_sent_scores):
+		if score > threshold:
 			if gold_label in item["labels_per_sentence"][index]:
 				scores['tp'] += 1
 				scores_per_label[gold_label]["tp"] += 1
