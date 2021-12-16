@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-	model = BertForMultiLabelSequenceClassification.from_pretrained("HoC_models/HoC_ncbi_bert_pubmed/")
+	model = BertForMultiLabelSequenceClassification.from_pretrained("cei_models/HoC_ncbi_bert_pubmed/")
 	model.to(device)
 	model.eval()
 
@@ -27,13 +27,13 @@ if __name__ == '__main__':
 	explanations = Generator(model)
 
 	topics = []
-	with open("Datasets/HoC/topics.json", "r") as f:
+	with open("Datasets/cei/topics.json", "r") as f:
 		for label in f.readlines():
 			topics.append(label.strip())
 	mlb = preprocessing.MultiLabelBinarizer()
 	mlb.fit([topics])
 
-	with open("Datasets/HoC/val.json", "r") as fval:
+	with open("Datasets/cei/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
 	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
