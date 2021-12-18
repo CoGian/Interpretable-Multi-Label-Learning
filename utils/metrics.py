@@ -1,7 +1,13 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MaxAbsScaler
-max_abs_scaler = MaxAbsScaler()
+
+
+def min_max_scaling(a,b, vector):
+	return a + (((vector - vector.min()) * (b - a)) / (vector.max() - vector.min()))
+
+
+def max_abs_scaling(vector):
+	return vector / np.abs(vector).max()
 
 
 def update_sentence_metrics(
@@ -17,15 +23,17 @@ def update_sentence_metrics(
 
 	sent_scores = []
 	for sent_expl in sentences_expl:
+
+		sent_expl_array = np.array(sent_expl)
 		if weight_aggregation == "mean_pos":
-			sent_expl = np.where(sent_expl >= .0, sent_expl, .0)
+			sent_expl_array = np.where(sent_expl_array >= .0, sent_expl_array, .0)
 		elif weight_aggregation == "mean_abs":
-			sent_expl = np.abs(sent_expl)
-		sent_scores.append(np.mean(max_abs_scaler.fit_transform(np.reshape(sent_expl, (1, -1)))[0]))
+			sent_expl_array = np.abs(sent_expl_array)
+		sent_scores.append(np.mean(sent_expl_array))
 
 	sent_scores = np.array(sent_scores)
 
-	scaled_sent_scores = (sent_scores - sent_scores.min()) / (sent_scores.max() - sent_scores.min())
+	scaled_sent_scores = min_max_scaling(0, 1, sent_scores)
 	# percentile_threshold = np.percentile(sent_scores, threshold)
 	one_hot = np.zeros((1, len(gold_labels)), dtype=np.float32)
 	one_hot[0, output_index] = 1

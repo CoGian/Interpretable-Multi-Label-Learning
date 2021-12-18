@@ -1,13 +1,15 @@
 import argparse
 import json
 import re
+
+import numpy as np
 from transformers import AutoTokenizer
 from LRP_BERT_explainability.BERT.BertForMultiLabelSequenceClassification import BertForMultiLabelSequenceClassification
 from LRP_BERT_explainability.ExplanationGenerator import Generator
 from sklearn import preprocessing
 import torch
 from tqdm import tqdm
-from utils.metrics import update_sentence_metrics, print_metrics
+from utils.metrics import update_sentence_metrics, print_metrics, max_abs_scaling
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -72,9 +74,22 @@ if __name__ == '__main__':
 				input_ids=input_ids,
 				attention_mask=attention_mask,
 				start_layer=0)
+
+			word_attributions_per_pred_class = np.array([
+				word_attributions.cpu().detach().numpy()
+				for word_attributions in word_attributions_per_pred_class])
+
+			if weight_aggregation == "mean_pos":
+				word_attributions_per_pred_class = np.where(word_attributions_per_pred_class >= .0, word_attributions_per_pred_class, .0)
+
+			word_attributions_per_pred_class = [
+				max_abs_scaling(word_attributions)
+				for word_attributions in word_attributions_per_pred_class]
+
 		except RuntimeError:
 			print("RuntimeError error for item: ", item["pmid"])
 			continue
+
 		try:
 			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
@@ -82,7 +97,7 @@ if __name__ == '__main__':
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
-					sent_expl.append(word_attributions_per_pred_class[i][index].cpu().detach().numpy())
+					sent_expl.append(word_attributions_per_pred_class[i][index])
 					if id.cpu().detach().numpy() == 1012:
 						sentences_expl.append(sent_expl)
 						sent_expl = []
