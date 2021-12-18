@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 
+
 # compute rollout between attention layers
 def compute_rollout_attention(all_layer_matrices, start_layer=0):
     # adding residual consideration- code adapted from https://github.com/samiraabnar/attention_flow
@@ -17,11 +18,11 @@ def compute_rollout_attention(all_layer_matrices, start_layer=0):
 
 
 class Generator:
-    def __init__(self, model):
+    def __init__(self, model, weight_aggregation):
         self.model = model
         self.model.eval()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+        self.weight_aggregation = weight_aggregation
 
     def forward(self, input_ids, attention_mask):
         return self.model(input_ids, attention_mask)
@@ -54,7 +55,14 @@ class Generator:
                 cam = cam[0].reshape(-1, cam.shape[-1], cam.shape[-1])
                 grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
                 cam = grad * cam
-                cam = cam.mean(dim=0)
+
+                if self.weight_aggregation == "mean_pos":
+                    cam = cam.clamp(min=0).mean(dim=0)
+                elif self.weight_aggregation == "mean_abs":
+                    cam = cam.abs().mean(0)
+                else:
+                    cam = cam.mean(dim=0)
+
                 cams.append(cam.unsqueeze(0))
             rollout = compute_rollout_attention(cams, start_layer=start_layer)
             rollout[:, 0, 0] = 0

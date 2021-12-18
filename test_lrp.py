@@ -9,7 +9,7 @@ from LRP_BERT_explainability.ExplanationGenerator import Generator
 from sklearn import preprocessing
 import torch
 from tqdm import tqdm
-from utils.metrics import update_sentence_metrics, print_metrics, max_abs_scaling
+from utils.metrics import update_sentence_metrics, print_metrics, max_abs_scaling, min_max_scaling
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 	tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
 
-	explanations = Generator(model)
+	explanations = Generator(model, weight_aggregation=weight_aggregation)
 
 	topics = []
 	with open("Datasets/" + dataset_name + "/topics.json", "r") as f:
@@ -79,11 +79,9 @@ if __name__ == '__main__':
 				word_attributions.cpu().detach().numpy()
 				for word_attributions in word_attributions_per_pred_class])
 
-			if weight_aggregation == "mean_pos":
-				word_attributions_per_pred_class = np.where(word_attributions_per_pred_class >= .0, word_attributions_per_pred_class, .0)
-
 			word_attributions_per_pred_class = [
-				max_abs_scaling(word_attributions)
+				max_abs_scaling(word_attributions) if weight_aggregation == "mean"
+				else min_max_scaling(0, 1, word_attributions)
 				for word_attributions in word_attributions_per_pred_class]
 
 		except RuntimeError:
@@ -110,8 +108,7 @@ if __name__ == '__main__':
 					scores_per_label,
 					mlb,
 					item,
-					threshold,
-					weight_aggregation
+					threshold
 				)
 
 		except IndexError:

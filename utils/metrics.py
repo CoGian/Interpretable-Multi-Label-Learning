@@ -18,18 +18,11 @@ def update_sentence_metrics(
 		scores_per_label,
 		mlb,
 		item,
-		threshold=0.9,
-		weight_aggregation="mean"):
+		threshold=0.9):
 
 	sent_scores = []
 	for sent_expl in sentences_expl:
-
-		sent_expl_array = np.array(sent_expl)
-		if weight_aggregation == "mean_pos":
-			sent_expl_array = np.where(sent_expl_array >= .0, sent_expl_array, .0)
-		elif weight_aggregation == "mean_abs":
-			sent_expl_array = np.abs(sent_expl_array)
-		sent_scores.append(np.mean(sent_expl_array))
+		sent_scores.append(np.mean(sent_expl))
 
 	sent_scores = np.array(sent_scores)
 
