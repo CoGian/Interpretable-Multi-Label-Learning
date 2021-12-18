@@ -59,7 +59,7 @@ class Generator:
                 if self.weight_aggregation == "mean_pos":
                     cam = cam.clamp(min=0).mean(dim=0)
                 elif self.weight_aggregation == "mean_abs":
-                    cam = cam.abs().mean(0)
+                    cam = cam.abs().mean(dim=0)
                 else:
                     cam = cam.mean(dim=0)
 

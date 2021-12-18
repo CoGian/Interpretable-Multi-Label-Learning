@@ -22,7 +22,7 @@ def update_sentence_metrics(
 
 	sent_scores = []
 	for sent_expl in sentences_expl:
-		sent_scores.append(np.mean(sent_expl))
+		sent_scores.append(np.mean(np.sort(sent_expl)[-10:]))
 
 	sent_scores = np.array(sent_scores)
 
