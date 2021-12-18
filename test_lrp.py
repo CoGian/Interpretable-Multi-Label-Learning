@@ -12,13 +12,30 @@ from utils.metrics import update_sentence_metrics, print_metrics
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
-		'--threshold', '-t', help='The percentile threshold of accepting a sentence as rationale')
+		'--threshold',
+		'-t',
+		help='The threshold of accepting a sentence as rationale',
+		default=0.9)
+	parser.add_argument(
+		'--weight_aggregation',
+		'-wa',
+		help='The weight aggregation methods: mean, mean_pos, mean_abs',
+		default="mean")
+
+	parser.add_argument(
+		'--dataset_name',
+		'-dn',
+		help='The dataset name for testing',
+		default="HoC")
 	args = parser.parse_args()
 	threshold = float(args.threshold)
+	weight_aggregation = str(args.weight_aggregation)
+	dataset_name = str(args.dataset_name)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-	model = BertForMultiLabelSequenceClassification.from_pretrained("cei_models/cei_ncbi_bert_pubmed/")
+	model = BertForMultiLabelSequenceClassification.from_pretrained(
+		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed/")
 	model.to(device)
 	model.eval()
 
@@ -27,13 +44,13 @@ if __name__ == '__main__':
 	explanations = Generator(model)
 
 	topics = []
-	with open("Datasets/cei/topics.json", "r") as f:
+	with open("Datasets/" + dataset_name + "/topics.json", "r") as f:
 		for label in f.readlines():
 			topics.append(label.strip())
 	mlb = preprocessing.MultiLabelBinarizer()
 	mlb.fit([topics])
 
-	with open("Datasets/cei/val.json", "r") as fval:
+	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
 	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
@@ -51,10 +68,10 @@ if __name__ == '__main__':
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
 		try:
-			word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(input_ids=input_ids,
-																							 attention_mask=attention_mask,
-
-																							 start_layer=0)
+			word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+				start_layer=0)
 		except RuntimeError:
 			print("RuntimeError error for item: ", item["pmid"])
 			continue
@@ -78,7 +95,8 @@ if __name__ == '__main__':
 					scores_per_label,
 					mlb,
 					item,
-					threshold
+					threshold,
+					weight_aggregation
 				)
 
 		except IndexError:

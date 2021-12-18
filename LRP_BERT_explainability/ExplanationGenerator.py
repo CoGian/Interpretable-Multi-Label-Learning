@@ -15,6 +15,7 @@ def compute_rollout_attention(all_layer_matrices, start_layer=0):
         joint_attention = matrices_aug[i].bmm(joint_attention)
     return joint_attention
 
+
 class Generator:
     def __init__(self, model):
         self.model = model
@@ -53,11 +54,10 @@ class Generator:
                 cam = cam[0].reshape(-1, cam.shape[-1], cam.shape[-1])
                 grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
                 cam = grad * cam
-                cam = cam.clamp(min=0).mean(dim=0)
+                cam = cam.mean(dim=0)
                 cams.append(cam.unsqueeze(0))
             rollout = compute_rollout_attention(cams, start_layer=start_layer)
             rollout[:, 0, 0] = 0
             explanation = rollout[:, 0][0]
-            scaled_explanation = (explanation - explanation.min()) / (explanation.max() - explanation.min())
-            word_attributions.append(scaled_explanation)
+            word_attributions.append(explanation)
         return word_attributions, output, output_indexes

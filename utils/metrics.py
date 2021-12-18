@@ -1,11 +1,27 @@
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MaxAbsScaler
+max_abs_scaler = MaxAbsScaler()
 
 
-def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, scores_per_label, mlb, item, threshold=90):
+def update_sentence_metrics(
+		sentences_expl,
+		gold_labels,
+		output_index,
+		scores,
+		scores_per_label,
+		mlb,
+		item,
+		threshold=0.9,
+		weight_aggregation="mean"):
+
 	sent_scores = []
 	for sent_expl in sentences_expl:
-		sent_scores.append(np.mean(np.sort(sent_expl)[-10:]))
+		if weight_aggregation == "mean_pos":
+			sent_expl = np.where(sent_expl >= .0, sent_expl, .0)
+		elif weight_aggregation == "mean_abs":
+			sent_expl = np.abs(sent_expl)
+		sent_scores.append(np.mean(max_abs_scaler.fit_transform(np.reshape(sent_expl, (1, -1)))[0]))
 
 	sent_scores = np.array(sent_scores)
 
@@ -16,17 +32,17 @@ def update_sentence_metrics(sentences_expl, gold_labels, output_index, scores, s
 
 	gold_label = mlb.inverse_transform(one_hot)[0][0]
 
-	gold_label_check = gold_label.split("---")[0] + "--" + gold_label.split("---")[1]
+	# gold_label_check = gold_label.split("---")[0] + "--" + gold_label.split("---")[1]
 	for index, score in enumerate(scaled_sent_scores):
 		if score > threshold:
-			if gold_label_check.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label.lower() in item["labels_per_sentence"][index].lower():
 				scores['tp'] += 1
 				scores_per_label[gold_label]["tp"] += 1
 			else:
 				scores['fp'] += 1
 				scores_per_label[gold_label]["fp"] += 1
 		else:
-			if gold_label_check.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label.lower() in item["labels_per_sentence"][index].lower():
 				scores['fn'] += 1
 				scores_per_label[gold_label]["fn"] += 1
 			else:
