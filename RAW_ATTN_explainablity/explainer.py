@@ -14,7 +14,7 @@ class Explainer:
         logits = output.logits
         output_indexes = [i for i, j in enumerate(torch.sigmoid(logits).cpu().detach().numpy()[0]) if j >= .5]
 
-        attn_weights = np.array([item.detach().numpy() for item in output.attentions[starting_layer: ending_layer]])
+        attn_weights = np.array([item.cpu().detach().numpy() for item in output.attentions[starting_layer: ending_layer]])
         word_attributions = attn_weights.mean(axis=0).mean(axis=1).mean(axis=1)
         # word_attributions = attn_weights.mean(axis=0).mean(axis=1)[:, 0] # taking only CLS tokeν attentions between it and all others tokens
         word_attributions[:, -1] = 0
