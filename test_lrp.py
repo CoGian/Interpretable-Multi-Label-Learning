@@ -55,9 +55,9 @@ if __name__ == '__main__':
 	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": 0}
 	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
-
+	count_output_expl = 0
 	for item in tqdm(val_dataset):
 
 		text = item["text"].lower()
@@ -92,6 +92,8 @@ if __name__ == '__main__':
 			for i, output_index in enumerate(output_indexes):
 				if output_index not in gold_indexes:
 					continue
+
+				count_output_expl += 1
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
@@ -104,10 +106,14 @@ if __name__ == '__main__':
 					sentences_expl,
 					gold_labels,
 					output_index,
+					output,
 					scores,
 					scores_per_label,
 					mlb,
 					item,
+					text,
+					model,
+					tokenizer,
 					threshold
 				)
 
@@ -115,4 +121,5 @@ if __name__ == '__main__':
 			print("IndexError error for item: ", item["pmid"])
 			continue
 
+	scores["faithfulness"] /= count_output_expl
 	print_metrics(scores, scores_per_label, topics)
