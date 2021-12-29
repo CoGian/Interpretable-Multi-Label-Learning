@@ -129,6 +129,8 @@ class Metrics(object):
 		micro_precision = micro_precision / self.config["batch_size"]
 		micro_recall = micro_recall / self.config["batch_size"]
 
+		print(micro_f1, micro_precision, micro_recall)
+
 		return micro_f1, micro_precision, micro_recall
 
 	def reset(self):
