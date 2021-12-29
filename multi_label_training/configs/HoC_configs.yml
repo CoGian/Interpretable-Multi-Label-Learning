@@ -13,8 +13,8 @@ parameters:
   token_classification: True
 pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
 logging:
-  project: ncbi_bert_pubmed
+  project: ncbi_bert_pubmed_multitask
   logger_file: HoC
 checkpoint:
   folder: HoC_models
-  subfolder: HoC_ncbi_bert_pubmed
+  subfolder: HoC_ncbi_bert_pubmed_multitask
