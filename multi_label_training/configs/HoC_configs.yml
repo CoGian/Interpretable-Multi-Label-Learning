@@ -6,7 +6,7 @@ parameters:
   n_labels: 10
   lr: 0.00002
   epochs: 30
-  batch_size: 4
+  batch_size: 1
   max_length: 512
   dropout: 0.1
   threshold: 0.5

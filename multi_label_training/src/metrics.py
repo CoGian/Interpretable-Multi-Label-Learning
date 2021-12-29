@@ -121,15 +121,21 @@ class Metrics(object):
 		micro_precision = 0
 		micro_recall = 0
 		for target, prediction in zip(numpy_targets, predictions):
-			micro_f1 += f1_score(y_true=target, y_pred=prediction, average='micro')
-			micro_precision += precision_score(y_true=target, y_pred=prediction, average='micro')
-			micro_recall += recall_score(y_true=target, y_pred=prediction, average='micro')
+			instance_micro_f1 = 0
+			instance_micro_precision = 0
+			instance_micro_recall = 0
+			for token_target, token_prediction in zip(target, prediction):
+				instance_micro_f1 += f1_score(y_true=token_target, y_pred=token_prediction, average='micro')
+				instance_micro_precision += precision_score(y_true=token_target, y_pred=token_prediction, average='micro')
+				instance_micro_recall += recall_score(y_true=token_target, y_pred=token_prediction, average='micro')
+
+			micro_f1 += instance_micro_f1 / self.config["max_length"]
+			micro_precision += instance_micro_precision / self.config["max_length"]
+			micro_recall += instance_micro_recall / self.config["max_length"]
 
 		micro_f1 = micro_f1 / self.config["batch_size"]
 		micro_precision = micro_precision / self.config["batch_size"]
 		micro_recall = micro_recall / self.config["batch_size"]
-
-		print(micro_f1, micro_precision, micro_recall)
 
 		return micro_f1, micro_precision, micro_recall
 
