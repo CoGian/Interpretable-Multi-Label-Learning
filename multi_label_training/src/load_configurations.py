@@ -16,6 +16,7 @@ def load_configs(configs):
 	assert isinstance(parameters['max_length'], int)
 	assert isinstance(parameters['dropout'], float)
 	assert isinstance(parameters['threshold'], float)
+	assert isinstance(parameters['token_classification'], bool)
 
 	arg_dict['n_labels'] = parameters['n_labels']
 	arg_dict['lr'] = parameters['lr']
@@ -24,6 +25,7 @@ def load_configs(configs):
 	arg_dict['max_length'] = parameters['max_length']
 	arg_dict['dropout'] = parameters['dropout']
 	arg_dict['threshold'] = parameters['threshold']
+	arg_dict['token_classification'] = parameters['token_classification']
 
 	assert isinstance(configs.get('pretrained_model'), str)
 	arg_dict['pretrained_model'] = configs.get('pretrained_model')

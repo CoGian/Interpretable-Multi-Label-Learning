@@ -37,13 +37,15 @@ if __name__ == '__main__':
 			config["train_file"],
 			config["topics"],
 			tokenizer,
-			config["max_length"]
+			config["max_length"],
+			config["token_classification"]
 		)
 		validation_dataset = JsonDataset(
 			config["val_file"],
 			config["topics"],
 			tokenizer,
-			config["max_length"]
+			config["max_length"],
+			config["token_classification"]
 		)
 	else:
 		exit()

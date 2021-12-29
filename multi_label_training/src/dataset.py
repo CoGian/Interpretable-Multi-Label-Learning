@@ -5,6 +5,7 @@ from sklearn import preprocessing
 import re
 from nltk import TreebankWordTokenizer
 from transformers import AutoTokenizer
+import numpy as np
 
 
 class CsvDataset(Dataset):
@@ -54,10 +55,11 @@ class CsvDataset(Dataset):
 
 class JsonDataset(Dataset):
 
-    def __init__(self, json_file, topics_file, tokenizer, max_len):
+    def __init__(self, json_file, topics_file, tokenizer, max_len, token_classification=False):
         self.tokenizer = tokenizer
         self.max_len = max_len
         self.dataset = pd.read_json(json_file)
+        self.token_classification = True
         self.topics = []
         with open(topics_file, "r") as f:
             for label in f.readlines():
@@ -88,11 +90,35 @@ class JsonDataset(Dataset):
             return_tensors="pt"
         )
 
-        return {
+        item = {
             'ids': inputs['input_ids'].flatten(),
             'mask': inputs['attention_mask'].flatten(),
-            'targets': torch.FloatTensor(labels[0])
+            'targets': torch.FloatTensor(labels[0]),
         }
+
+        if self.token_classification:
+            sentence_counter = 0
+            labels_per_sentence = row.labels_per_sentence
+            encoded_label_per_sentence = None
+            targets_per_input_id = None
+            for index, id in enumerate(inputs['input_ids'].flatten()):
+                if index == 0:
+                    encoded_label_per_sentence = torch.FloatTensor(
+                        self.mlb.transform([labels_per_sentence[sentence_counter]])[0]).unsqueeze(0)
+                    targets_per_input_id = encoded_label_per_sentence
+                else:
+                    targets_per_input_id = torch.cat(
+                        [targets_per_input_id, encoded_label_per_sentence])
+
+                if id == 1012:
+                    sentence_counter += 1
+                    if sentence_counter == len(labels_per_sentence):
+                        encoded_label_per_sentence = torch.FloatTensor(
+                            self.mlb.transform([[]])[0]).unsqueeze(0)
+
+            item['targets_per_input_id'] = targets_per_input_id
+
+        return item
 
 
 def get_dataloader(dataset, batch_size, shuffle=True):
@@ -109,6 +135,9 @@ def preprocess_text(text):
     tokenized = TreebankWordTokenizer().tokenize(text)
     text = ' '.join(tokenized)
     text = re.sub(r"\s's\b", "'s", text)
+    text = re.sub(r'(\S)\.', r'\g<1>,', text)
+    text = re.sub(r'\.(\S)', r',\g<1>', text)
+
     return text
 
 
@@ -119,13 +148,12 @@ if __name__ == '__main__':
         "../../Datasets/HoC/train.json",
         "../../Datasets/HoC/topics.json",
         temp_tokenizer,
-        256
+        512,
+        True
         )
-    train_dataloader = get_dataloader(train_dataset, 2, False)
+    train_dataloader = get_dataloader(train_dataset, 1, False)
 
     for batch in train_dataloader:
         print(batch["ids"].shape)
         print(batch["mask"].shape)
-        print(batch["targets"].shape)
-        print(batch["targets"])
         break

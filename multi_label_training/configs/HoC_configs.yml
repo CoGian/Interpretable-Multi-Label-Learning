@@ -10,6 +10,7 @@ parameters:
   max_length: 512
   dropout: 0.1
   threshold: 0.5
+  token_classification: True
 pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
 logging:
   project: ncbi_bert_pubmed

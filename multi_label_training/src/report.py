@@ -7,6 +7,7 @@ from tqdm import tqdm
 class Report(object):
     def __init__(self, config, metrics):
         super(Report, self).__init__()
+        self.config = config
         self.metrics = metrics
         self.progress_bar_writer = None
 
@@ -16,28 +17,48 @@ class Report(object):
 
     def report_progress_bar(self, epoch, mode='train'):
 
-        loss, micro_f1 = self.metrics.compute_loss_and_micro_f1(mode)
+        if self.config["token_classification"]:
+            loss, micro_f1, micro_f1_per_input_id = self.metrics.compute_loss_and_micro_f1(mode)
+            self.progress_bar_writer.set_description(
+                'Epoch:{} - {}_loss {:.3f} | {}_micro_f1: {:.3f} | {}_micro_f1_per_input_id: {:.3f}'.format(
+                    epoch,
+                    mode,
+                    loss,
+                    mode,
+                    micro_f1,
+                    mode,
+                    micro_f1_per_input_id)
+            )
+        else:
+            loss, micro_f1 = self.metrics.compute_loss_and_micro_f1(mode)
 
-        self.progress_bar_writer.set_description(
-            'Epoch:{} - {}_loss {:.3f} | {}_micro_f1: {:.3f}'.format(
-                epoch,
-                mode,
-                loss,
-                mode,
-                micro_f1,
-                mode)
-        )
-
+            self.progress_bar_writer.set_description(
+                'Epoch:{} - {}_loss {:.3f} | {}_micro_f1: {:.3f}'.format(
+                    epoch,
+                    mode,
+                    loss,
+                    mode,
+                    micro_f1)
+            )
+            
         self.progress_bar_writer.update()
 
     def report_wandb(self, epoch, learning_rate):
         if self.wandb_writer is None:
             return
-
-        train_loss, train_micro_f1, train_micro_precision, train_micro_recall =\
-            self.metrics.compute_epoch_metrics(mode='train')
-        validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall =\
-            self.metrics.compute_epoch_metrics(mode='validation')
+        
+        if self.config["token_classification"]:
+            train_loss, train_micro_f1, train_micro_precision, train_micro_recall,\
+                train_micro_f1_per_input_id, train_micro_precision_per_input_id, train_micro_recall_per_input_id = \
+                self.metrics.compute_epoch_metrics(mode='train')
+            validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall,\
+                validation_micro_f1_per_input_id, validation_micro_precision_per_input_id, validation_micro_recall_per_input_id = \
+                self.metrics.compute_epoch_metrics(mode='validation')
+        else:
+            train_loss, train_micro_f1, train_micro_precision, train_micro_recall =\
+                self.metrics.compute_epoch_metrics(mode='train')
+            validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall =\
+                self.metrics.compute_epoch_metrics(mode='validation')
 
         log_dir = {
             "epoch": epoch,
@@ -51,6 +72,14 @@ class Report(object):
             "validation_micro_precision": validation_micro_precision,
             "validation_micro_recall": validation_micro_recall,
         }
+
+        if self.config["token_classification"]:
+            log_dir["train_micro_f1_per_input_id"] = train_micro_f1_per_input_id
+            log_dir["train_micro_precision_per_input_id"] = train_micro_precision_per_input_id
+            log_dir["train_micro_recall_per_input_id"] = train_micro_recall_per_input_id
+            log_dir["validation_micro_f1_per_input_id"] = validation_micro_f1_per_input_id
+            log_dir["validation_micro_precision_per_input_id"] = validation_micro_precision_per_input_id
+            log_dir["validation_micro_recall_per_input_id"] = validation_micro_recall_per_input_id
 
         self.wandb_writer.log(log_dir)
 
