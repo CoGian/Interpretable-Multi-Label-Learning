@@ -23,6 +23,7 @@ class Metrics(object):
 			loss,
 			outputs_per_input_id=None,
 			targets_per_input_id=None,
+			attention_mask=None,
 			mode='train'):
 		"""
 		Compute micro F1 for each batch and update the epoch's metrics
@@ -43,6 +44,7 @@ class Metrics(object):
 				self.compute_batch_metrics_per_input_id(
 					outputs_per_input_id,
 					targets_per_input_id,
+					attention_mask,
 					mode)
 
 			self.micro_f1[mode+"_per_input_id"] += micro_f1_per_input_id
@@ -106,7 +108,7 @@ class Metrics(object):
 		micro_recall = recall_score(y_true=numpy_targets, y_pred=predictions, average='micro')
 		return micro_f1, micro_precision, micro_recall
 
-	def compute_batch_metrics_per_input_id(self, outputs, targets, mode='train'):
+	def compute_batch_metrics_per_input_id(self, outputs, targets, attention_masks, mode='train'):
 		"""
 		compute the micro F1 for each batch
 		:param outputs: The output of the model for this batch
@@ -121,20 +123,22 @@ class Metrics(object):
 		micro_precision = 0
 		micro_recall = 0
 
-		for target, prediction in zip(numpy_targets, predictions):
+		for target, prediction, mask in zip(numpy_targets, predictions,attention_masks):
 
 			instance_micro_f1 = 0
 			instance_micro_precision = 0
 			instance_micro_recall = 0
-			for token_target, token_prediction in zip(target, prediction):
+			count_tokens = 0
+			for token_target, token_prediction, token_mask in zip(target, prediction, mask):
+				if token_mask == 1:
+					count_tokens += 1
+					instance_micro_f1 += f1_score(y_true=token_target, y_pred=token_prediction, average='micro')
+					instance_micro_precision += precision_score(y_true=token_target, y_pred=token_prediction, average='micro')
+					instance_micro_recall += recall_score(y_true=token_target, y_pred=token_prediction, average='micro')
 
-				instance_micro_f1 += f1_score(y_true=token_target, y_pred=token_prediction, average='micro')
-				instance_micro_precision += precision_score(y_true=token_target, y_pred=token_prediction, average='micro')
-				instance_micro_recall += recall_score(y_true=token_target, y_pred=token_prediction, average='micro')
-
-			micro_f1 += instance_micro_f1 / self.config["max_length"]
-			micro_precision += instance_micro_precision / self.config["max_length"]
-			micro_recall += instance_micro_recall / self.config["max_length"]
+			micro_f1 += instance_micro_f1 / count_tokens
+			micro_precision += instance_micro_precision / count_tokens
+			micro_recall += instance_micro_recall / count_tokens
 
 		micro_f1 = micro_f1 / self.config["batch_size"]
 		micro_precision = micro_precision / self.config["batch_size"]

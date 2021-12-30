@@ -103,7 +103,8 @@ class Trainer(object):
                 targets,
                 total_loss.item(),
                 torch.sigmoid(logits_per_input_id),
-                targets_per_input_id)
+                targets_per_input_id,
+                data['mask'])
         else:
             loss, logits, targets = self.forward_pass(data)
 
@@ -123,6 +124,7 @@ class Trainer(object):
                 total_loss.item(),
                 torch.sigmoid(logits_per_input_id),
                 targets_per_input_id,
+                data['mask'],
                 mode="validation")
         else:
             loss, logits, targets = self.forward_pass(data)
