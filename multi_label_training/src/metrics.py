@@ -137,9 +137,9 @@ class Metrics(object):
 					# else:
 					# 	print("55555555", token_target, token_prediction)
 
-					instance_micro_f1 += f1_score(y_true=[token_target], y_pred=[token_prediction], average='micro')
-					instance_micro_precision += precision_score(y_true=[token_target], y_pred=[token_prediction], average='micro')
-					instance_micro_recall += recall_score(y_true=[token_target], y_pred=[token_prediction], average='micro')
+					instance_micro_f1 += f1_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
+					instance_micro_precision += precision_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
+					instance_micro_recall += recall_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
 
 			micro_f1 += instance_micro_f1 / count_tokens
 			micro_precision += instance_micro_precision / count_tokens
