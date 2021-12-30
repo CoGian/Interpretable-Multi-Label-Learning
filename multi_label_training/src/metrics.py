@@ -134,6 +134,8 @@ class Metrics(object):
 					count_tokens += 1
 					if f1_score(y_true=token_target, y_pred=token_prediction, average='micro') == 1.0:
 						print(token_target, token_prediction)
+					else:
+						print("55555555", token_target, token_prediction)
 
 					instance_micro_f1 += f1_score(y_true=token_target, y_pred=token_prediction, average='micro')
 					instance_micro_precision += precision_score(y_true=token_target, y_pred=token_prediction, average='micro')
