@@ -132,10 +132,10 @@ class Metrics(object):
 			for token_target, token_prediction, token_mask in zip(target, prediction, mask):
 				if token_mask == 1:
 					count_tokens += 1
-					if f1_score(y_true=token_target, y_pred=token_prediction, average='micro') == 1.0:
-						print(token_target, token_prediction)
-					else:
-						print("55555555", token_target, token_prediction)
+					# if f1_score(y_true=token_target, y_pred=token_prediction, average='micro') == 1.0:
+					# 	print(token_target, token_prediction)
+					# else:
+					# 	print("55555555", token_target, token_prediction)
 
 					instance_micro_f1 += f1_score(y_true=[token_target], y_pred=[token_prediction], average='micro')
 					instance_micro_precision += precision_score(y_true=[token_target], y_pred=[token_prediction], average='micro')
