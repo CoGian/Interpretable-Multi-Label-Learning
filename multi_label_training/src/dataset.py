@@ -112,7 +112,7 @@ class JsonDataset(Dataset):
 
                 if id == 1012:
                     sentence_counter += 1
-                    if sentence_counter == len(labels_per_sentence):
+                    if sentence_counter >= len(labels_per_sentence):
                         encoded_label_per_sentence = torch.FloatTensor(
                             self.mlb.transform([[]])[0]).unsqueeze(0)
 
