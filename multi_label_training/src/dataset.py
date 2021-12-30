@@ -108,13 +108,16 @@ class JsonDataset(Dataset):
                     targets_per_input_id = encoded_label_per_sentence
                 else:
                     targets_per_input_id = torch.cat(
-                        [targets_per_input_id, encoded_label_per_sentence])
+                        (targets_per_input_id, encoded_label_per_sentence))
 
                 if id == 1012:
                     sentence_counter += 1
                     if sentence_counter >= len(labels_per_sentence):
                         encoded_label_per_sentence = torch.FloatTensor(
                             self.mlb.transform([[]])[0]).unsqueeze(0)
+                    else:
+                        encoded_label_per_sentence = torch.FloatTensor(
+                            self.mlb.transform([labels_per_sentence[sentence_counter]])[0]).unsqueeze(0)
 
             item['targets_per_input_id'] = targets_per_input_id
 
