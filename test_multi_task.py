@@ -39,4 +39,4 @@ if __name__ == '__main__':
 
 		output = model(input_ids, attention_mask)
 
-		print(output)
+		print(torch.sigmoid(output[1][1]))

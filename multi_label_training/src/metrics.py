@@ -119,37 +119,30 @@ class Metrics(object):
 		outputs = outputs.cpu().data.numpy()
 		numpy_targets = targets.cpu().data.numpy()
 		predictions = np.where(outputs > self.threshold, 1, 0)
-		micro_f1 = 0
-		micro_precision = 0
-		micro_recall = 0
+
+		tp = 0
+		fp = 0
+		fn = 0
 
 		for target, prediction, mask in zip(numpy_targets, predictions, attention_masks):
-
-			instance_micro_f1 = 0
-			instance_micro_precision = 0
-			instance_micro_recall = 0
-			count_tokens = 0
 			for token_target, token_prediction, token_mask in zip(target, prediction, mask):
 				if token_mask == 1:
-					count_tokens += 1
-					# if f1_score(y_true=token_target, y_pred=token_prediction, average='micro') == 1.0:
-					# 	print(token_target, token_prediction)
-					# else:
-					# 	print("55555555", token_target, token_prediction)
+					for i in range(len(token_prediction)):
+						if token_target[i] == token_prediction[i] == 1:
+							tp += 1
+						elif token_prediction[i] == 1 and token_target[i] != token_prediction[i]:
+							fp += 1
+						elif token_prediction[i] == 0 and token_target[i] != token_prediction[i]:
+							fn += 1
 
-					instance_micro_f1 += f1_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
-					instance_micro_precision += precision_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
-					instance_micro_recall += recall_score(y_true=[token_target], y_pred=[token_prediction], average='micro', zero_division=0)
+		micro_precision = tp / (tp+fp)
+		micro_recall = tp / (tp+fn)
+		try:
+			micro_f1 = (2 * micro_recall * micro_precision) / (micro_recall + micro_precision)
+		except ZeroDivisionError:
+			micro_f1 = 0.0
 
-			micro_f1 += instance_micro_f1 / count_tokens
-			micro_precision += instance_micro_precision / count_tokens
-			micro_recall += instance_micro_recall / count_tokens
-
-		micro_f1 = micro_f1 / self.config["batch_size"]
-		micro_precision = micro_precision / self.config["batch_size"]
-		micro_recall = micro_recall / self.config["batch_size"]
-
-		print(micro_f1, micro_precision, micro_recall)
+		# print(micro_f1, micro_precision, micro_recall)
 		return micro_f1, micro_precision, micro_recall
 
 	def reset(self):

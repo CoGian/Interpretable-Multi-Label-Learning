@@ -43,7 +43,19 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
                             labels.float().view(-1, self.num_labels))
 
         if self.multi_task:
-            logits_per_input_id = self.classifier(outputs[0])
+
+            embeddings = outputs[0]
+            # create a vector to retain the output for each token. Shape: [batch_size, seq_len, num_classes]
+            logits_per_input_id = torch.zeros((embeddings.shape[0], embeddings.shape[1], self.num_labels))
+
+            # feed-forward for each token in the sequence and save it in outputs
+            for i in range(embeddings.shape[1]):
+                # the logits for a single token. Shape: [batch_size, num_classes]
+                logit = self.classifier(self.dropout(embeddings[:, i, :]))
+
+                logits_per_input_id[:, i, :] = logit
+
+            # logits_per_input_id = self.classifier(outputs[0])
             loss_fct_per_input_id = torch.nn.BCEWithLogitsLoss(reduction="none")
             loss_per_input_id = None
             if targets_per_input_id is not None:
