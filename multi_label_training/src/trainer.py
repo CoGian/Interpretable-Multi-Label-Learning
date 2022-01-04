@@ -56,10 +56,12 @@ class Trainer(object):
             if self.config["token_classification"]:
                 validation_loss, validation_micro_f1, validation_micro_f1_per_input_id = \
                     self.metrics.compute_loss_and_micro_f1('validation')
+                self.checkpoint.maybe_save_checkpoint(epoch, validation_loss, validation_micro_f1, validation_micro_f1_per_input_id)
             else:
                 validation_loss, validation_micro_f1 = self.metrics.compute_loss_and_micro_f1('validation')
+                self.checkpoint.maybe_save_checkpoint(epoch, validation_loss, validation_micro_f1)
 
-            self.checkpoint.maybe_save_checkpoint(epoch, validation_loss, validation_micro_f1)
+
             self.report.report_wandb(epoch, current_lr)
             self.metrics.reset()
 

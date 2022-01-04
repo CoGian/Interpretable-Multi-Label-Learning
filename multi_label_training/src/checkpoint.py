@@ -11,11 +11,18 @@ class Checkpoint(object):
 		self.optimizer = optimizer
 		self.model = model
 		self.checkpoint_validation_micro_f1 = sys.float_info.min
+		self.checkpoint_validation_micro_f1_per_input_id = sys.float_info.min
 		self.checkpoint_validation_loss = sys.float_info.max
 		self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-	def maybe_save_checkpoint(self, epoch, validation_loss, validation_micro_f1):
-		if self.checkpoint_validation_micro_f1 < validation_micro_f1:
+	def maybe_save_checkpoint(
+			self,
+			epoch,
+			validation_loss,
+			validation_micro_f1,
+			validation_micro_f1_per_input_id=sys.float_info.min):
+		if self.checkpoint_validation_micro_f1 < validation_micro_f1\
+				or self.checkpoint_validation_micro_f1_per_input_id < validation_micro_f1_per_input_id:
 			if self.checkpoint_dir is None:
 				return
 
