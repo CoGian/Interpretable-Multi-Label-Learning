@@ -24,9 +24,16 @@ if __name__ == '__main__':
 		help='The dataset name for testing',
 		default="HoC")
 
+	parser.add_argument(
+		'--most_important_tokens',
+		'-mt',
+		help='The most important tokens per sentence to kane into consideration: 0:all',
+		default=10)
+
 	args = parser.parse_args()
 	threshold = float(args.threshold)
 	dataset_name = str(args.dataset_name)
+	most_important_tokens = int(args.most_important_tokens)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	model = BertForMultiLabelSequenceClassification.from_pretrained(
@@ -91,7 +98,8 @@ if __name__ == '__main__':
 				text,
 				model,
 				tokenizer,
-				threshold
+				threshold,
+				most_important_tokens
 			)
 
 		output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]

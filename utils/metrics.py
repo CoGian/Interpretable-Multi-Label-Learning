@@ -14,6 +14,10 @@ def max_abs_scaling(vector):
 	return vector / np.abs(vector).max()
 
 
+def abs_sorting(lst):
+	"""Sorts list based on absolute values without changing list values to absolute values"""
+	return sorted(lst, key=abs)
+
 def update_sentence_metrics(
 		sentences_expl,
 		gold_labels,
@@ -27,11 +31,12 @@ def update_sentence_metrics(
 		text,
 		model,
 		tokenizer,
-		threshold=0.9):
+		threshold=0.9,
+		most_important_tokens=10):
 
 	sent_scores = []
 	for sent_expl in sentences_expl:
-		sent_scores.append(np.mean(np.sort(sent_expl)[-10:]))
+		sent_scores.append(np.mean(abs_sorting(sent_expl)[-most_important_tokens:]))
 
 	sent_scores = np.array(sent_scores)
 
