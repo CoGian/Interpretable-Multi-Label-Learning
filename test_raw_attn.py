@@ -72,6 +72,8 @@ if __name__ == '__main__':
 			for output_index in output_indexes:
 				if output_index not in gold_indexes:
 					continue
+
+				count_output_expl += 1
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):

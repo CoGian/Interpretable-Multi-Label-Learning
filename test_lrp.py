@@ -75,15 +75,6 @@ if __name__ == '__main__':
 				attention_mask=attention_mask,
 				start_layer=0)
 
-			word_attributions_per_pred_class = np.array([
-				word_attributions.cpu().detach().numpy()
-				for word_attributions in word_attributions_per_pred_class])
-
-			word_attributions_per_pred_class = [
-				max_abs_scaling(word_attributions) if weight_aggregation == "mean"
-				else min_max_scaling(0, 1, word_attributions)
-				for word_attributions in word_attributions_per_pred_class]
-
 		except RuntimeError:
 			print("RuntimeError error for item: ", item["pmid"])
 			continue

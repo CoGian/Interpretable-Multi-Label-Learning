@@ -11,6 +11,7 @@ from IG_BERT_explainability.errors import (
     AttributionTypeNotSupportedError,
     InputIdsNotCalculatedError,
 )
+from utils.metrics import max_abs_scaling, min_max_scaling
 
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
@@ -33,6 +34,7 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
+        weight_aggregation="mean_pos"
     ):
         """
         Args:
@@ -61,6 +63,8 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
         self.internal_batch_size = None
         self.n_steps = 50
 
+        self.weight_aggregation = weight_aggregation
+
     def encode(self, text: str = None) -> list:
         return self.tokenizer.encode(text, add_special_tokens=False, max_length=512, truncation=True)
 
@@ -72,7 +76,9 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
         "Returns predicted labelset indexes for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
-            preds = self.model(self.input_ids)[0]
+            output = self.model(self.input_ids)
+            self.output = output
+            preds = output[0]
             output_indexes = [i for i, j in enumerate(torch.sigmoid(preds).cpu().detach().numpy()[0]) if j >= .5]
             return output_indexes
         else:
@@ -93,12 +99,22 @@ class MultiLabelSequenceClassificationExplainer(BaseExplainer):
                 for word, value in attributions.word_attributions:
 
                     if value < 0:
-                        word_attributions.append(0)
+                        if self.weight_aggregation == "mean_pos":
+                            word_attributions.append(0)
+                        elif self.weight_aggregation == "mean_abs":
+                            word_attributions.append(abs(value))
+                        else:
+                            word_attributions.append(value)
                     else:
                         word_attributions.append(value)
                     words.append(word)
                 word_attributions = np.array(word_attributions)
-                scaled_word_attributions = (word_attributions - word_attributions.min()) / (word_attributions.max() - word_attributions.min())
+
+                if self.weight_aggregation == "mean":
+                    scaled_word_attributions = max_abs_scaling(word_attributions)
+                else:
+                    scaled_word_attributions = min_max_scaling(0, 1, word_attributions)
+
                 word_attributions = [(word, value) for word, value in zip(words, scaled_word_attributions)]
 
                 word_attributions_list.append(word_attributions)

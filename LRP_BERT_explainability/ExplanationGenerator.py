@@ -3,6 +3,9 @@ import torch
 
 
 # compute rollout between attention layers
+from utils.metrics import max_abs_scaling, min_max_scaling
+
+
 def compute_rollout_attention(all_layer_matrices, start_layer=0):
     # adding residual consideration- code adapted from https://github.com/samiraabnar/attention_flow
     num_tokens = all_layer_matrices[0].shape[1]
@@ -34,7 +37,7 @@ class Generator:
 
         output_indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
 
-        word_attributions = []
+        word_attributions_per_pred_class = []
 
         for index in output_indexes:
             one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
@@ -68,5 +71,15 @@ class Generator:
             rollout = compute_rollout_attention(cams, start_layer=start_layer)
             rollout[:, 0, 0] = 0
             explanation = rollout[:, 0][0]
-            word_attributions.append(explanation)
-        return word_attributions, classifier_output, output_indexes
+            word_attributions_per_pred_class.append(explanation)
+
+        word_attributions_per_pred_class = np.array([
+            word_attributions.cpu().detach().numpy()
+            for word_attributions in word_attributions_per_pred_class])
+
+        word_attributions_per_pred_class = [
+            max_abs_scaling(word_attributions) if self.weight_aggregation == "mean"
+            else min_max_scaling(0, 1, word_attributions)
+            for word_attributions in word_attributions_per_pred_class]
+
+        return word_attributions_per_pred_class, classifier_output, output_indexes
