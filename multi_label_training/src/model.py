@@ -46,7 +46,7 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
 
             embeddings = outputs[0]
             # create a vector to retain the output for each token. Shape: [batch_size, seq_len, num_classes]
-            logits_per_input_id = torch.zeros((embeddings.shape[0], embeddings.shape[1], self.num_labels))
+            logits_per_input_id = torch.zeros((embeddings.shape[0], embeddings.shape[1], self.num_labels)).to(self.device)
 
             # feed-forward for each token in the sequence and save it in outputs
             for i in range(embeddings.shape[1]):
@@ -61,8 +61,9 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
             if targets_per_input_id is not None:
                 loss_per_input_id = 0
                 for instance, target_instance, mask in zip(logits_per_input_id, targets_per_input_id, attention_mask):
+                    print(instance.device, target_instance.device)
                     loss_per_input_id += torch.mean(mask.unsqueeze(1) *
-                                                    loss_fct_per_input_id(instance, target_instance.float()))
+                                                    loss_fct_per_input_id(instance, target_instance))
 
                 loss_per_input_id = loss_per_input_id / logits.shape[0]
 

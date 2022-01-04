@@ -135,8 +135,16 @@ class Metrics(object):
 						elif token_prediction[i] == 0 and token_target[i] != token_prediction[i]:
 							fn += 1
 
-		micro_precision = tp / (tp+fp)
-		micro_recall = tp / (tp+fn)
+		try:
+			micro_precision = tp / (tp+fp)
+		except ZeroDivisionError:
+			micro_precision = 0.0
+
+		try:
+			micro_recall = tp / (tp+fn)
+		except ZeroDivisionError:
+			micro_recall = 0.0
+
 		try:
 			micro_f1 = (2 * micro_recall * micro_precision) / (micro_recall + micro_precision)
 		except ZeroDivisionError:
