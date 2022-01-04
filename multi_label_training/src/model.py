@@ -61,7 +61,6 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
             if targets_per_input_id is not None:
                 loss_per_input_id = 0
                 for instance, target_instance, mask in zip(logits_per_input_id, targets_per_input_id, attention_mask):
-                    print(instance.device, target_instance.device)
                     loss_per_input_id += torch.mean(mask.unsqueeze(1) *
                                                     loss_fct_per_input_id(instance, target_instance))
 
