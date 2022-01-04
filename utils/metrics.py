@@ -21,6 +21,7 @@ def update_sentence_metrics(
 		output,
 		scores,
 		scores_per_label,
+		top_sent_per_label,
 		mlb,
 		item,
 		text,
@@ -59,8 +60,12 @@ def update_sentence_metrics(
 				scores['tn'] += 1
 				scores_per_label[gold_label]["tn"] += 1
 
-	output_diff = calc_output_diff(logit_output, output_index, text, pred_pos_sentences, model, tokenizer)
-	scores["faithfulness"] += output_diff
+	if pred_pos_sentences:
+		output_diff = calc_output_diff(logit_output, output_index, text, pred_pos_sentences, model, tokenizer)
+		top_sent_per_label.append(np.sort(pred_pos_sentences)[-1])
+		output_diff_top1 = calc_output_diff(logit_output, output_index, text, np.sort(pred_pos_sentences)[-1:], model, tokenizer)
+		scores["faithfulness"].append(output_diff)
+		scores["faithfulness_top1"].append(output_diff_top1)
 
 
 def print_metrics(scores, scores_per_label, topics):
@@ -86,7 +91,7 @@ def print_metrics(scores, scores_per_label, topics):
 		print(pd.DataFrame(metrics_per_labels))
 
 
-def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, tokenizer):
+def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, tokenizer, all_top_1=False):
 
 	text_sentences = text.split(".")
 	text_sentences = [sent for index, sent in enumerate(text_sentences) if index not in sentence_indexes]
@@ -109,4 +114,31 @@ def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, 
 	return diff
 
 
+def calc_output_diff_all_top1(logit_outputs, output_indexes, text, sentence_indexes, model, tokenizer):
+
+	text_sentences = text.split(".")
+	text_sentences = [sent for index, sent in enumerate(text_sentences) if index not in sentence_indexes]
+	input_text = " . ".join(text_sentences)
+
+	encoding = tokenizer([input_text], return_tensors='pt', max_length=512, truncation=True)
+	input_ids = encoding['input_ids'].to(device)
+	attention_mask = encoding['attention_mask'].to(device)
+
+	try:
+		if model.multi_task:
+			perturbed_output = torch.sigmoid(model(input_ids, attention_mask)[0][0][0]).cpu().detach()
+		else:
+			perturbed_output = torch.sigmoid(model(input_ids, attention_mask)[0][0]).cpu().detach()
+	except AttributeError:
+		perturbed_output = torch.sigmoid(model(input_ids, attention_mask)[0][0]).cpu().detach()
+
+	diff = 0
+
+	for output_index in output_indexes:
+		logit_output = torch.sigmoid(logit_outputs[0][0])[output_index].cpu().detach()
+		logit_perturbed = perturbed_output[output_index]
+		diff += float(logit_output - logit_perturbed)
+
+	diff /= len(output_indexes)
+	return diff
 

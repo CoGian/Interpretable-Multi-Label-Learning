@@ -1,12 +1,12 @@
 import argparse
 import json
 import re
-
+import numpy as np
 from transformers import AutoTokenizer
 from multi_label_training.src.model import BertForMultiLabelSequenceClassification
 from RAW_ATTN_explainablity.explainer import Explainer
 from sklearn import preprocessing
-from utils.metrics import update_sentence_metrics, print_metrics
+from utils.metrics import update_sentence_metrics, print_metrics, calc_output_diff_all_top1
 import torch
 from tqdm import tqdm
 
@@ -50,9 +50,8 @@ if __name__ == '__main__':
 	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": 0}
+	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [], "faithfulness_all_top_1": []}
 	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
-	count_output_expl = 0
 
 	for item in tqdm(val_dataset):
 
@@ -67,13 +66,13 @@ if __name__ == '__main__':
 
 		word_attributions, output_indexes, output = explainer.get_raw_attn_explanations(
 			input_ids=input_ids, attention_mask=attention_mask)
+		top_sent_per_label = []
 
 		try:
 			for output_index in output_indexes:
 				if output_index not in gold_indexes:
 					continue
 
-				count_output_expl += 1
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
@@ -89,6 +88,7 @@ if __name__ == '__main__':
 					output,
 					scores,
 					scores_per_label,
+					top_sent_per_label,
 					mlb,
 					item,
 					text,
@@ -96,8 +96,17 @@ if __name__ == '__main__':
 					tokenizer,
 					threshold
 				)
+
+			output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
+			if top_sent_per_label:
+				scores["faithfulness_all_top_1"].append(
+					calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+
 		except IndexError:
 			print("4444 error for item: ", item["pmid"])
 
-	scores["faithfulness"] /= count_output_expl
+	scores["faithfulness"] = np.mean(scores["faithfulness"])
+	scores["faithfulness_top1"] = np.mean(scores["faithfulness_top1"])
+	scores["faithfulness_all_top_1"] = np.mean(scores["faithfulness_all_top_1"])
+
 	print_metrics(scores, scores_per_label, topics)

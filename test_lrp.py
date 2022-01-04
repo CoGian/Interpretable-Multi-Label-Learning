@@ -9,7 +9,8 @@ from LRP_BERT_explainability.ExplanationGenerator import Generator
 from sklearn import preprocessing
 import torch
 from tqdm import tqdm
-from utils.metrics import update_sentence_metrics, print_metrics, max_abs_scaling, min_max_scaling
+from utils.metrics import update_sentence_metrics, print_metrics, max_abs_scaling, min_max_scaling, \
+	calc_output_diff_all_top1
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -55,9 +56,8 @@ if __name__ == '__main__':
 	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": 0}
+	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [], "faithfulness_all_top_1": []}
 	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
-	count_output_expl = 0
 	for item in tqdm(val_dataset):
 
 		text = item["text"].lower()
@@ -69,6 +69,7 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
+		top_sent_per_label = []
 		try:
 			word_attributions_per_pred_class, output, output_indexes = explanations.generate_LRP(
 				input_ids=input_ids,
@@ -84,7 +85,6 @@ if __name__ == '__main__':
 				if output_index not in gold_indexes:
 					continue
 
-				count_output_expl += 1
 				sentences_expl = []
 				sent_expl = []
 				for index, id in enumerate(input_ids[0]):
@@ -100,6 +100,7 @@ if __name__ == '__main__':
 					output,
 					scores,
 					scores_per_label,
+					top_sent_per_label,
 					mlb,
 					item,
 					text,
@@ -108,9 +109,17 @@ if __name__ == '__main__':
 					threshold
 				)
 
+			output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
+			if top_sent_per_label:
+				scores["faithfulness_all_top_1"].append(
+					calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+
 		except IndexError:
 			print("IndexError error for item: ", item["pmid"])
 			continue
 
-	scores["faithfulness"] /= count_output_expl
+	scores["faithfulness"] = np.mean(scores["faithfulness"])
+	scores["faithfulness_top1"] = np.mean(scores["faithfulness_top1"])
+	scores["faithfulness_all_top_1"] = np.mean(scores["faithfulness_all_top_1"])
+
 	print_metrics(scores, scores_per_label, topics)
