@@ -28,7 +28,8 @@ class Generator:
         return self.model(input_ids, attention_mask)
 
     def generate_LRP(self, input_ids, attention_mask, start_layer=11):
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
+        classifier_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
+        output = classifier_output[0]
         kwargs = {"alpha": 1}
 
         output_indexes = [i for i, j in enumerate(torch.sigmoid(output).cpu().detach().numpy()[0]) if j >= .5]
@@ -68,4 +69,4 @@ class Generator:
             rollout[:, 0, 0] = 0
             explanation = rollout[:, 0][0]
             word_attributions.append(explanation)
-        return word_attributions, output, output_indexes
+        return word_attributions, classifier_output, output_indexes

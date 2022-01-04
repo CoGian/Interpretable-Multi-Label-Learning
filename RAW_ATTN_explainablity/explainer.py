@@ -20,4 +20,4 @@ class Explainer:
         word_attributions[:, -1] = 0
         word_attributions[:, 0] = 0
 
-        return word_attributions, output_indexes
+        return word_attributions, output_indexes, output

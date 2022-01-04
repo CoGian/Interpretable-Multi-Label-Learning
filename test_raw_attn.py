@@ -18,12 +18,21 @@ if __name__ == '__main__':
 		'-t',
 		help='The threshold of accepting a sentence as rationale',
 		default=0.9)
+
+	parser.add_argument(
+		'--dataset_name',
+		'-dn',
+		help='The dataset name for testing',
+		default="HoC")
+
 	args = parser.parse_args()
 	threshold = float(args.threshold)
+	dataset_name = str(args.dataset_name)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-	model = BertForMultiLabelSequenceClassification.from_pretrained("HoC_models/HoC_ncbi_bert_pubmed/")
+	model = BertForMultiLabelSequenceClassification.from_pretrained(
+		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed_multitask/")
 	model.to(device)
 	model.eval()
 
@@ -32,17 +41,19 @@ if __name__ == '__main__':
 	explainer = Explainer(model)
 
 	topics = []
-	with open("Datasets/HoC/topics.json", "r") as f:
+	with open("Datasets/" + dataset_name + "/topics.json", "r") as f:
 		for label in f.readlines():
 			topics.append(label.strip())
 	mlb = preprocessing.MultiLabelBinarizer()
 	mlb.fit([topics])
 
-	with open("Datasets/HoC/val.json", "r") as fval:
+	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": 0}
 	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
+	count_output_expl = 0
+
 	for item in tqdm(val_dataset):
 
 		text = item["text"].lower()
@@ -54,7 +65,7 @@ if __name__ == '__main__':
 		gold_labels = mlb.transform([item["labels"]])[0]
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
-		word_attributions, output_indexes = explainer.get_raw_attn_explanations(
+		word_attributions, output_indexes, output = explainer.get_raw_attn_explanations(
 			input_ids=input_ids, attention_mask=attention_mask)
 
 		try:
@@ -73,13 +84,18 @@ if __name__ == '__main__':
 					sentences_expl,
 					gold_labels,
 					output_index,
+					output,
 					scores,
 					scores_per_label,
 					mlb,
 					item,
+					text,
+					model,
+					tokenizer,
 					threshold
 				)
 		except IndexError:
 			print("4444 error for item: ", item["pmid"])
 
+	scores["faithfulness"] /= count_output_expl
 	print_metrics(scores, scores_per_label, topics)

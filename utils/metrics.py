@@ -39,12 +39,12 @@ def update_sentence_metrics(
 	one_hot[0, output_index] = 1
 
 	gold_label = mlb.inverse_transform(one_hot)[0][0]
-	logit_output = torch.sigmoid(output[0])[output_index].cpu().detach()
+	logit_output = torch.sigmoid(output[0][0])[output_index].cpu().detach()
 
 	pred_pos_sentences = []
 	for index, score in enumerate(scaled_sent_scores):
 		if score > threshold:
-			if gold_label.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label.lower() in item["labels_per_sentence"][index]:
 				scores['tp'] += 1
 				scores_per_label[gold_label]["tp"] += 1
 			else:
@@ -52,7 +52,7 @@ def update_sentence_metrics(
 				scores_per_label[gold_label]["fp"] += 1
 			pred_pos_sentences.append(index)
 		else:
-			if gold_label.lower() in item["labels_per_sentence"][index].lower():
+			if gold_label.lower() in item["labels_per_sentence"][index]:
 				scores['fn'] += 1
 				scores_per_label[gold_label]["fn"] += 1
 			else:
@@ -95,7 +95,14 @@ def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, 
 	encoding = tokenizer([input_text], return_tensors='pt', max_length=512, truncation=True)
 	input_ids = encoding['input_ids'].to(device)
 	attention_mask = encoding['attention_mask'].to(device)
-	logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0])[output_index].cpu().detach()
+
+	try:
+		if model.multi_task:
+			logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0][0])[output_index].cpu().detach()
+		else:
+			logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0])[output_index].cpu().detach()
+	except AttributeError:
+		logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0])[output_index].cpu().detach()
 
 	diff = float(logit_output - logit_perturbed)
 
