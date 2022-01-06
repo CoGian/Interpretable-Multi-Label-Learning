@@ -100,9 +100,10 @@ def print_metrics(scores, scores_per_label, topics):
 		print(pd.DataFrame(metrics_per_labels))
 
 
-def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, tokenizer, all_top_1=False):
+def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, tokenizer):
 
 	text_sentences = text.split(".")
+	num_sent = len(text_sentences)
 	text_sentences = [sent for index, sent in enumerate(text_sentences) if index not in sentence_indexes]
 	input_text = " . ".join(text_sentences)
 
@@ -118,7 +119,8 @@ def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, 
 	except AttributeError:
 		logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0])[output_index].cpu().detach()
 
-	diff = float(logit_output - logit_perturbed) * (1/len(sentence_indexes))
+	alpha = 2/num_sent
+	diff = float(logit_output - logit_perturbed) * min((1 + alpha - (len(sentence_indexes)/num_sent)), 1.0)
 
 	return diff
 
