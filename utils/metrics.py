@@ -119,7 +119,8 @@ def calc_output_diff(logit_output, output_index, text, sentence_indexes, model, 
 	except AttributeError:
 		logit_perturbed = torch.sigmoid(model(input_ids, attention_mask)[0][0])[output_index].cpu().detach()
 
-	diff = float(logit_output - logit_perturbed) * (1 - (len(sentence_indexes)/num_sent))
+	alpha = 1/num_sent
+	diff = float(logit_output - logit_perturbed) * min((1 + alpha - (len(sentence_indexes)/num_sent)), 1.0)
 
 	return diff
 
