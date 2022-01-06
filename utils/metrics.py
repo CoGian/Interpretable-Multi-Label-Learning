@@ -84,6 +84,8 @@ def print_metrics(scores, scores_per_label, topics):
 	print("Precision: ", precision)
 	print("F1: ", (2 * recall * precision) / (recall + precision))
 	print("Faithfulness: ", scores["faithfulness"])
+	print("Faithfulness_top1: ", scores["faithfulness_top1"])
+	print("Faithfulness_all_top_1: ", scores["faithfulness_all_top_1"])
 
 	metrics_per_labels = {}
 	for label in topics:
