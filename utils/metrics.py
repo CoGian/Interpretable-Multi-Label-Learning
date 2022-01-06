@@ -67,8 +67,10 @@ def update_sentence_metrics(
 
 	if pred_pos_sentences:
 		output_diff = calc_output_diff(logit_output, output_index, text, pred_pos_sentences, model, tokenizer)
-		top_sent_per_label.append(np.sort(pred_pos_sentences)[-1])
-		output_diff_top1 = calc_output_diff(logit_output, output_index, text, np.sort(pred_pos_sentences)[-1:], model, tokenizer)
+		scores_pred_pos_sentences = [scaled_sent_scores[sent_index] for sent_index in pred_pos_sentences]
+		top_sent_per_label.append(pred_pos_sentences[np.argsort(scores_pred_pos_sentences)[-1]])
+		output_diff_top1 = calc_output_diff(logit_output, output_index, text,
+											[pred_pos_sentences[np.argsort(scores_pred_pos_sentences)[-1]]], model, tokenizer)
 		scores["faithfulness"].append(output_diff)
 		scores["faithfulness_top1"].append(output_diff_top1)
 
