@@ -31,10 +31,24 @@ if __name__ == '__main__':
 		help='The most important tokens per sentence to kane into consideration: 0:all',
 		default=10)
 
+	parser.add_argument(
+		'--starting_layer',
+		'-sl',
+		help='Starting layer of attn mean aggregation',
+		default=0)
+
+	parser.add_argument(
+		'--last_layer',
+		'-ll',
+		help='Last layer of attn mean aggregation',
+		default=6)
+
 	args = parser.parse_args()
 	threshold = float(args.threshold)
 	dataset_name = str(args.dataset_name)
 	most_important_tokens = int(args.most_important_tokens)
+	starting_layer = int(args.starting_layer)
+	last_layer = int(args.last_layer)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -72,7 +86,7 @@ if __name__ == '__main__':
 		gold_indexes = [i for i, j in enumerate(gold_labels) if j >= 1]
 
 		word_attributions, output_indexes, output = explainer.get_raw_attn_explanations(
-			input_ids=input_ids, attention_mask=attention_mask)
+			input_ids=input_ids, attention_mask=attention_mask, starting_layer=starting_layer, last_layer=last_layer)
 		top_sent_per_label = []
 
 		try:
