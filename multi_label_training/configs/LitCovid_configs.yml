@@ -1,15 +1,16 @@
 dataset:
   train_file: Datasets/LitCovid/BC7-LitCovid-Train.csv
-  val_file: Datasets/LitCovid/BC7-LitCovid-Dev.csv
+  val_file: Datasets/LitCovid/BC7-LitCovid-Test-GS.csv
   topics: Datasets/LitCovid/topics.json
 parameters:
   n_labels: 7
   lr: 0.00002
   epochs: 10
-  batch_size: 32
-  max_length: 256
+  batch_size: 4
+  max_length: 512
   dropout: 0.1
   threshold: 0.5
+  token_classification: False
 pretrained_model: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
 logging:
   project: ncbi_bert_pubmed
