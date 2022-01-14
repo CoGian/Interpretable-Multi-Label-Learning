@@ -52,7 +52,7 @@ if __name__ == '__main__':
     model.to(device)
     model.eval()
 
-    multilabel_explainer = MultiLabelSequenceClassificationExplainer(model=model, tokenizer=tokenizer)
+    multilabel_explainer = MultiLabelSequenceClassificationExplainer(model=model, tokenizer=tokenizer, weight_aggregation=weight_aggregation)
 
     topics = []
     with open("Datasets/" + dataset_name + "/topics.json", "r") as f:
