@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 
+from utils.metrics import min_max_scaling
+
 
 class Explainer:
     def __init__(self, model):
@@ -20,4 +22,5 @@ class Explainer:
         word_attributions[:, -1] = 0
         word_attributions[:, 0] = 0
 
+        word_attributions = min_max_scaling(0, 1, word_attributions)
         return word_attributions, output_indexes, output
