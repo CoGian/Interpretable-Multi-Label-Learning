@@ -47,15 +47,25 @@ if __name__ == '__main__':
 			config["max_length"],
 			config["token_classification"]
 		)
+
+		test_dataset = JsonDataset(
+			config["test_file"],
+			config["topics"],
+			tokenizer,
+			config["max_length"],
+			config["token_classification"]
+		)
 	else:
 		exit()
 
 	train_dataloader = get_dataloader(train_dataset, config["batch_size"], True)
 	validation_dataloader = get_dataloader(validation_dataset, config["batch_size"], False)
+	test_dataloader = get_dataloader(test_dataset, config["batch_size"], False)
 
 	trainer = Trainer(
 		config=config,
 		train_dataloader=train_dataloader,
-		validation_dataloader=validation_dataloader)
+		validation_dataloader=validation_dataloader,
+		test_dataloader=test_dataloader)
 
 	trainer.train()

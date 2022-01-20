@@ -1,6 +1,7 @@
 dataset:
   train_file: Datasets/cei/train.json
   val_file: Datasets/cei/val.json
+  test_file: Datasets/cei/tests.json
   topics: Datasets/cei/topics.json
 parameters:
   n_labels: 11

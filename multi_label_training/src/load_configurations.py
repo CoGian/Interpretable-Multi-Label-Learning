@@ -3,9 +3,11 @@ def load_configs(configs):
 	dataset = configs.get('dataset')
 	assert isinstance(dataset['train_file'], str)
 	assert isinstance(dataset['val_file'], str)
+	assert isinstance(dataset['test_file'], str)
 	assert isinstance(dataset['topics'], str)
 	arg_dict['train_file'] = dataset['train_file']
 	arg_dict['val_file'] = dataset['val_file']
+	arg_dict['test_file'] = dataset['test_file']
 	arg_dict['topics'] = dataset['topics']
 
 	parameters = configs.get('parameters')

@@ -10,11 +10,14 @@ class Trainer(object):
     def __init__(self,
                  config,
                  train_dataloader,
-                 validation_dataloader):
+                 validation_dataloader,
+                 test_dataloader):
 
         self.config = config
         self.train_dataloader = train_dataloader
         self.validation_dataloader = validation_dataloader
+        self.test_dataloader = test_dataloader
+
         if config["token_classification"]:
             self.model = BertForMultiLabelSequenceClassification.from_pretrained(config["pretrained_model"],
                                                                                  num_labels=config["n_labels"],
@@ -49,6 +52,12 @@ class Trainer(object):
                 self.validation_step(data)
                 if batch_idx % 50 == 0:
                     self.report.report_progress_bar(epoch, mode="validation")
+
+            test_progress_bar = self.report.reset_progress_bar(self.test_dataloader)
+            for batch_idx, data in enumerate(test_progress_bar):
+                self.validation_step(data, mode="test")
+                if batch_idx % 50 == 0:
+                    self.report.report_progress_bar(epoch, mode="test")
 
             self.scheduler.step()
             current_lr = self.scheduler.get_last_lr()[0]
@@ -115,7 +124,7 @@ class Trainer(object):
             self.metrics.update_metrics(torch.sigmoid(logits), targets, loss.item())
 
     @torch.no_grad()
-    def validation_step(self, data):
+    def validation_step(self, data, mode="validation"):
         if self.config["token_classification"]:
             loss, logits, targets, loss_per_input_id, logits_per_input_id, targets_per_input_id = self.forward_pass(data)
             total_loss = torch.add(loss, loss_per_input_id)
@@ -126,10 +135,10 @@ class Trainer(object):
                 torch.sigmoid(logits_per_input_id),
                 targets_per_input_id,
                 data['mask'],
-                mode="validation")
+                mode=mode)
         else:
             loss, logits, targets = self.forward_pass(data)
-            self.metrics.update_metrics(torch.sigmoid(logits), targets, loss.item(), mode="validation")
+            self.metrics.update_metrics(torch.sigmoid(logits), targets, loss.item(), mode=mode)
 
 
 

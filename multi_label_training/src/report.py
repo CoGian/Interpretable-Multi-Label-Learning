@@ -54,11 +54,16 @@ class Report(object):
             validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall,\
                 validation_micro_f1_per_input_id, validation_micro_precision_per_input_id, validation_micro_recall_per_input_id = \
                 self.metrics.compute_epoch_metrics(mode='validation')
+            test_loss, test_micro_f1, test_micro_precision, test_micro_recall, \
+            test_micro_f1_per_input_id, test_micro_precision_per_input_id, test_micro_recall_per_input_id = \
+                self.metrics.compute_epoch_metrics(mode='test')
         else:
             train_loss, train_micro_f1, train_micro_precision, train_micro_recall =\
                 self.metrics.compute_epoch_metrics(mode='train')
             validation_loss, validation_micro_f1, validation_micro_precision, validation_micro_recall =\
                 self.metrics.compute_epoch_metrics(mode='validation')
+            test_loss, test_micro_f1, test_micro_precision, test_micro_recall = \
+                self.metrics.compute_epoch_metrics(mode='test')
 
         log_dir = {
             "epoch": epoch,
@@ -71,6 +76,10 @@ class Report(object):
             "validation_micro_f1": validation_micro_f1,
             "validation_micro_precision": validation_micro_precision,
             "validation_micro_recall": validation_micro_recall,
+            "test_loss": test_loss,
+            "test_micro_f1": test_micro_f1,
+            "test_micro_precision": test_micro_precision,
+            "test_micro_recall": test_micro_recall,
         }
 
         if self.config["token_classification"]:
@@ -80,6 +89,9 @@ class Report(object):
             log_dir["validation_micro_f1_per_input_id"] = validation_micro_f1_per_input_id
             log_dir["validation_micro_precision_per_input_id"] = validation_micro_precision_per_input_id
             log_dir["validation_micro_recall_per_input_id"] = validation_micro_recall_per_input_id
+            log_dir["test_micro_f1_per_input_id"] = test_micro_f1_per_input_id
+            log_dir["test_micro_precision_per_input_id"] = test_micro_precision_per_input_id
+            log_dir["test_micro_recall_per_input_id"] = test_micro_recall_per_input_id
 
         self.wandb_writer.log(log_dir)
 

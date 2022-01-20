@@ -6,11 +6,19 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 class Metrics(object):
 	def __init__(self, config):
 		self.config = config
-		self.steps = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.micro_f1 = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.micro_precision = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.micro_recall = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.loss_metric = dict(train=0, validation=0)
+		self.steps = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_f1 = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_precision = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_recall = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.loss_metric = dict(train=0, validation=0, test=0)
 		self.best_validation_loss = sys.float_info.max
 		self.best_validation_micro_f1 = sys.float_info.min
 		self.best_validation_micro_f1_per_input_id = sys.float_info.min
@@ -92,7 +100,7 @@ class Metrics(object):
 
 		return loss, micro_f1, micro_precision, micro_recall
 
-	def compute_batch_metrics(self, outputs, targets, mode='train'):
+	def compute_batch_metrics(self, outputs, targets):
 		"""
 		compute the micro F1 for each batch
 		:param outputs: The output of the model for this batch
@@ -108,7 +116,7 @@ class Metrics(object):
 		micro_recall = recall_score(y_true=numpy_targets, y_pred=predictions, average='micro')
 		return micro_f1, micro_precision, micro_recall
 
-	def compute_batch_metrics_per_input_id(self, outputs, targets, attention_masks, mode='train'):
+	def compute_batch_metrics_per_input_id(self, outputs, targets, attention_masks):
 		"""
 		compute the micro F1 for each batch
 		:param outputs: The output of the model for this batch
@@ -157,8 +165,16 @@ class Metrics(object):
 		"""
 		Reset losses and metrics at the end of an epoch
 		"""
-		self.steps = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.loss_metric = dict(train=0, validation=0)
-		self.micro_f1 = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.micro_recall = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
-		self.micro_precision = dict(train=0, validation=0, train_per_input_id=0, validation_per_input_id=0)
+		self.steps = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_f1 = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_precision = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.micro_recall = dict(
+			train=0, validation=0, test=0,
+			train_per_input_id=0, validation_per_input_id=0, test_per_input_id=0)
+		self.loss_metric = dict(train=0, validation=0, test=0)
