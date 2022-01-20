@@ -40,7 +40,7 @@ class Metrics(object):
 		:param loss: The computed batch loss
 		:param mode: Update train or val loss
 		"""
-		micro_f1, micro_precision, micro_recall = self.compute_batch_metrics(outputs, targets, mode)
+		micro_f1, micro_precision, micro_recall = self.compute_batch_metrics(outputs, targets)
 		self.steps[mode] += 1
 		self.loss_metric[mode] += loss
 		self.micro_f1[mode] += micro_f1
@@ -52,8 +52,7 @@ class Metrics(object):
 				self.compute_batch_metrics_per_input_id(
 					outputs_per_input_id,
 					targets_per_input_id,
-					attention_mask,
-					mode)
+					attention_mask)
 
 			self.micro_f1[mode+"_per_input_id"] += micro_f1_per_input_id
 			self.micro_precision[mode+"_per_input_id"] += micro_precision_per_input_id
