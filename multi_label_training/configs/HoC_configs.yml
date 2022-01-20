@@ -1,7 +1,7 @@
 dataset:
   train_file: Datasets/HoC/train.json
   val_file: Datasets/HoC/val.json
-  test_file: Datasets/cei/tests.json
+  test_file: Datasets/HoC/test.json
   topics: Datasets/HoC/topics.json
 parameters:
   n_labels: 10
