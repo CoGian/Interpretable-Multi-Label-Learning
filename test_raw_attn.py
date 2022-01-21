@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	mlb = preprocessing.MultiLabelBinarizer()
 	mlb.fit([topics])
 
-	with open("Datasets/" + dataset_name + "/val.json", "r") as fval:
+	with open("Datasets/" + dataset_name + "/test.json", "r") as fval:
 		val_dataset = json.load(fval)
 
 	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [], "faithfulness_all_top_1": []}
