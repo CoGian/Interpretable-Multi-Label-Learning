@@ -53,7 +53,7 @@ if __name__ == '__main__':
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 	model = BertForMultiLabelSequenceClassification.from_pretrained(
-		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed_multitask/")
+		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed/")
 	model.to(device)
 	model.eval()
 
