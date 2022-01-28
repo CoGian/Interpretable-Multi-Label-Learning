@@ -37,16 +37,30 @@ if __name__ == '__main__':
 		help='The most important tokens per sentence to kane into consideration: 0:all',
 		default=10)
 
+	parser.add_argument(
+		'--model_mode',
+		'-m',
+		help='The model used for tests: simple or multi',
+		default="simple")
+
 	args = parser.parse_args()
 	threshold = float(args.threshold)
 	weight_aggregation = str(args.weight_aggregation)
 	dataset_name = str(args.dataset_name)
 	most_important_tokens = int(args.most_important_tokens)
+	model_mode = str(args.model_mode)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-	model = BertForMultiLabelSequenceClassification.from_pretrained(
-		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed/")
+	tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
+
+	if model_mode == "multi":
+		model = BertForMultiLabelSequenceClassification.from_pretrained(
+			dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed_multitask/")
+	else:
+		model = BertForMultiLabelSequenceClassification.from_pretrained(
+			dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed/")
+
 	model.to(device)
 	model.eval()
 
