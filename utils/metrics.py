@@ -91,9 +91,21 @@ def print_metrics(scores, scores_per_label, topics):
 
 	metrics_per_labels = {}
 	for label in topics:
-		recall = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fn"])
-		precision = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fp"])
-		f1 = (2 * recall * precision) / (recall + precision)
+
+		try:
+			recall = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fn"])
+		except ZeroDivisionError:
+			recall = 0.0
+
+		try:
+			precision = scores_per_label[label]["tp"] / (scores_per_label[label]["tp"] + scores_per_label[label]["fp"])
+		except ZeroDivisionError:
+			precision = 0.0
+
+		try:
+			f1 = (2 * recall * precision) / (recall + precision)
+		except ZeroDivisionError:
+			f1 = 0.0
 		metrics_per_labels[label] = {"recall": recall, "precision": precision, "f1": f1}
 
 	with pd.option_context('display.max_rows', None, 'display.max_columns', None):
