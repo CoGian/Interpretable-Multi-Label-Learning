@@ -5,3 +5,8 @@ It will automatically download datasets and trained models and will start runnin
 ```bash
 nohup bash run_experiments.sh &
 ```
+you can see the progress with:
+```bash
+tail -f nohup.out 
+```
+It will finish when it outputs "finished"
