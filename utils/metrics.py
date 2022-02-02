@@ -74,6 +74,8 @@ def update_sentence_metrics(
 		scores["faithfulness"].append(output_diff)
 		scores["faithfulness_top1"].append(output_diff_top1)
 
+	return scores, scores_per_label
+
 
 def print_metrics(scores, scores_per_label, topics):
 	print("tp", scores['tp'])

@@ -77,9 +77,9 @@ if __name__ == '__main__':
     with open("Datasets/" + dataset_name + "/test.json", "r") as fval:
         val_dataset = json.load(fval)
 
-    scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [],
-              "faithfulness_all_top_1": []}
-    scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
+    scores_per_threshold = [{"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [],
+              "faithfulness_all_top_1": []} for threshold in range(9, 0, -1)]
+    scores_per_label_per_threshold = [{label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics} for threshold in range(9, 0, -1)]
     for item in tqdm(val_dataset):
 
         text = item["text"].lower()
@@ -94,47 +94,54 @@ if __name__ == '__main__':
         output_indexes = multilabel_explainer.selected_indexes
         output = multilabel_explainer.output
 
-        top_sent_per_label = []
+        for threshold_index, threshold in enumerate(range(9, 0, -1)):
 
-        try:
-            for i, output_index in enumerate(output_indexes):
-                if output_index not in gold_indexes:
-                    continue
+            top_sent_per_label = []
 
-                sentences_expl = []
-                sent_expl = []
-                for word in enumerate(word_attributions_per_pred_class[i]):
-                    sent_expl.append(word[1][1])
-                    if word[1][0] == ".":
-                        sentences_expl.append(sent_expl)
-                        sent_expl = []
+            try:
+                for i, output_index in enumerate(output_indexes):
+                    if output_index not in gold_indexes:
+                        continue
 
-                update_sentence_metrics(
-                    sentences_expl,
-                    gold_labels,
-                    output_index,
-                    output,
-                    scores,
-                    scores_per_label,
-                    top_sent_per_label,
-                    mlb,
-                    item,
-                    text,
-                    model,
-                    tokenizer,
-                    threshold,
-                    most_important_tokens
-                )
+                    sentences_expl = []
+                    sent_expl = []
+                    for word in enumerate(word_attributions_per_pred_class[i]):
+                        sent_expl.append(word[1][1])
+                        if word[1][0] == ".":
+                            sentences_expl.append(sent_expl)
+                            sent_expl = []
 
-            output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
-            if top_sent_per_label:
-                scores["faithfulness_all_top_1"].append(
-                    calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+                    scores, scores_per_label = update_sentence_metrics(
+                        sentences_expl,
+                        gold_labels,
+                        output_index,
+                        output,
+                        scores_per_threshold[threshold_index],
+                        scores_per_label_per_threshold[threshold_index],
+                        top_sent_per_label,
+                        mlb,
+                        item,
+                        text,
+                        model,
+                        tokenizer,
+                        threshold/10,
+                        most_important_tokens
+                    )
 
-        except IndexError:
-            print("4444 error for item: ", item["pmid"])
+                    scores_per_threshold[threshold_index] = scores
+                    scores_per_label_per_threshold[threshold_index] = scores_per_label
 
-    scores["faithfulness"] = np.mean(scores["faithfulness"])
-    scores["faithfulness_top1"] = np.mean(scores["faithfulness_top1"])
-    scores["faithfulness_all_top_1"] = np.mean(scores["faithfulness_all_top_1"])
-    print_metrics(scores, scores_per_label, topics)
+                output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
+                if top_sent_per_label:
+                    scores_per_threshold[threshold_index]["faithfulness_all_top_1"].append(
+                        calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+
+            except IndexError:
+                print("4444 error for item: ", item["pmid"])
+
+    for threshold_index, threshold in enumerate(range(9, 0, -1)):
+        print("Results for threshold: ", threshold/10)
+        scores_per_threshold[threshold_index]["faithfulness"] = np.mean(scores_per_threshold[threshold_index]["faithfulness"])
+        scores_per_threshold[threshold_index]["faithfulness_top1"] = np.mean(scores_per_threshold[threshold_index]["faithfulness_top1"])
+        scores_per_threshold[threshold_index]["faithfulness_all_top_1"] = np.mean(scores_per_threshold[threshold_index]["faithfulness_all_top_1"])
+        print_metrics(scores_per_threshold[threshold_index], scores_per_label_per_threshold[threshold_index], topics)
