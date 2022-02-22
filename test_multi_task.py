@@ -106,7 +106,7 @@ if __name__ == '__main__':
 			output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
 			if top_sent_per_label:
 				scores_per_threshold[threshold_index]["faithfulness_all_top_1"].append(
-					calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+					calc_output_diff_all_top1(output[0], output_indexes, text, top_sent_per_label, model, tokenizer))
 
 	for threshold_index, threshold in enumerate(range(9, 0, -1)):
 		print("Results for threshold: ", threshold / 10)
