@@ -4,10 +4,10 @@ echo Testing multi_task -------------------------------
 python test_multi_task.py -dn HoC -mt 10
 
 echo Testing random -------------------------------
-python test_multi_task.py -dn HoC -mt 10 -m simple
+python test_random.py -dn HoC -mt 10 -m simple
 
 echo Testing random_multi_task -------------------------------
-python test_multi_task.py -dn HoC -mt 10 -m multi
+python test_random.py -dn HoC -mt 10 -m multi
 
 echo Testing raw_attn_0_6 -------------------------------
 python test_raw_attn.py -dn HoC -mt 10 -sl 0 -ll 6 -m simple
