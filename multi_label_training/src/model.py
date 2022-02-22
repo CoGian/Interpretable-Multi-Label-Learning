@@ -7,6 +7,7 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
     def __init__(self, config, multi_task=False):
         super().__init__(config)
         self.multi_task = multi_task
+        self.classifier2 = torch.nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self,
                 input_ids=None,
@@ -51,7 +52,7 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
             # feed-forward for each token in the sequence and save it in outputs
             for i in range(embeddings.shape[1]):
                 # the logits for a single token. Shape: [batch_size, num_classes]
-                logit = self.classifier(self.dropout(embeddings[:, i, :]))
+                logit = self.classifier2(self.dropout(embeddings[:, i, :]))
 
                 logits_per_input_id[:, i, :] = logit
 
