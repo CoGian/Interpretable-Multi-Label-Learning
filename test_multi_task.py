@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	model = BertForMultiLabelSequenceClassification.from_pretrained(
-		dataset_name + "_models/" + dataset_name + "_bert_multi_task/", multi_task=True)
+		dataset_name + "_models/" + dataset_name + "_bert_2_multi_task/", multi_task=True)
 	model.to(device)
 	model.eval()
 	tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")

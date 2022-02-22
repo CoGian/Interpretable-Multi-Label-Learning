@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     if model_mode == "multi":
         model = BertForMultiLabelSequenceClassification.from_pretrained(
-            dataset_name + "_models/" + dataset_name + "_bert_multi_task/")
+            dataset_name + "_models/" + dataset_name + "_bert_2_multi_task/")
     else:
         model = BertForMultiLabelSequenceClassification.from_pretrained(
             dataset_name + "_models/" + dataset_name + "_bert/")
