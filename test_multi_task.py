@@ -83,7 +83,7 @@ if __name__ == '__main__':
 						sentences_expl.append(sent_expl)
 						sent_expl = []
 
-					scores, scores_per_label = update_sentence_metrics(
+				scores, scores_per_label = update_sentence_metrics(
 						sentences_expl,
 						gold_labels,
 						output_index,
@@ -98,10 +98,10 @@ if __name__ == '__main__':
 						tokenizer,
 						threshold / 10,
 						most_important_tokens
-					)
+				)
 
-					scores_per_threshold[threshold_index] = scores
-					scores_per_label_per_threshold[threshold_index] = scores_per_label
+				scores_per_threshold[threshold_index] = scores
+				scores_per_label_per_threshold[threshold_index] = scores_per_label
 
 			output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
 			if top_sent_per_label:
