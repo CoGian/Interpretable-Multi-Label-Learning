@@ -14,11 +14,6 @@ from utils.metrics import update_sentence_metrics, print_metrics, calc_output_di
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--threshold',
-        '-t',
-        help='The threshold of accepting a sentence as rationale',
-        default=0.9)
 
     parser.add_argument(
         '--weight_aggregation',
@@ -45,7 +40,6 @@ if __name__ == '__main__':
         default="simple")
 
     args = parser.parse_args()
-    threshold = float(args.threshold)
     weight_aggregation = str(args.weight_aggregation)
     dataset_name = str(args.dataset_name)
     most_important_tokens = int(args.most_important_tokens)
@@ -53,14 +47,14 @@ if __name__ == '__main__':
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
     if model_mode == "multi":
         model = BertForMultiLabelSequenceClassification.from_pretrained(
-            dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed_multitask/")
+            dataset_name + "_models/" + dataset_name + "_bert_multi_task/")
     else:
         model = BertForMultiLabelSequenceClassification.from_pretrained(
-            dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed/")
+            dataset_name + "_models/" + dataset_name + "_bert/")
 
     model.to(device)
     model.eval()

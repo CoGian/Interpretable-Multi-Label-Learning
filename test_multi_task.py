@@ -12,11 +12,6 @@ from tqdm import tqdm
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument(
-		'--threshold',
-		'-t',
-		help='The threshold of accepting a sentence as rationale',
-		default=0.9)
 
 	parser.add_argument(
 		'--dataset_name',
@@ -31,16 +26,15 @@ if __name__ == '__main__':
 		default=10)
 
 	args = parser.parse_args()
-	threshold = float(args.threshold)
 	dataset_name = str(args.dataset_name)
 	most_important_tokens = int(args.most_important_tokens)
 
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	model = BertForMultiLabelSequenceClassification.from_pretrained(
-		dataset_name + "_models/" + dataset_name + "_ncbi_bert_pubmed_multitask/", multi_task=True)
+		dataset_name + "_models/" + dataset_name + "_bert_multi_task/", multi_task=True)
 	model.to(device)
 	model.eval()
-	tokenizer = AutoTokenizer.from_pretrained("bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12")
+	tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 	topics = []
 
 	with open("Datasets/" + dataset_name + "/topics.json", "r") as f:
@@ -52,8 +46,10 @@ if __name__ == '__main__':
 	with open("Datasets/" + dataset_name + "/test.json", "r") as fval:
 		val_dataset = json.load(fval)
 
-	scores = {"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [], "faithfulness_all_top_1": []}
-	scores_per_label = {label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics}
+	scores_per_threshold = [{"tp": 0, "fp": 0, "tn": 0, "fn": 0, "faithfulness": [], "faithfulness_top1": [],
+							 "faithfulness_all_top_1": []} for threshold in range(9, 0, -1)]
+	scores_per_label_per_threshold = [{label: {"tp": 0, "fp": 0, "tn": 0, "fn": 0} for label in topics} for threshold in
+									  range(9, 0, -1)]
 
 	for item in tqdm(val_dataset):
 
@@ -70,43 +66,56 @@ if __name__ == '__main__':
 		targets_per_input_id = torch.sigmoid(output[1][1])[0]
 
 		output_indexes = [i for i, j in enumerate(torch.sigmoid(output[0].logits).cpu().detach().numpy()[0]) if j >= .5]
-		top_sent_per_label = []
 
-		for output_index in output_indexes:
-			if output_index not in gold_indexes:
-				continue
+		for threshold_index, threshold in enumerate(range(9, 0, -1)):
+			top_sent_per_label = []
 
-			sentences_expl = []
-			sent_expl = []
+			for output_index in output_indexes:
+				if output_index not in gold_indexes:
+					continue
 
-			for index, id in enumerate(input_ids[0]):
-				sent_expl.append(targets_per_input_id[index, output_index].cpu().detach().numpy())
-				if id.cpu().detach().numpy() == 1012:
-					sentences_expl.append(sent_expl)
-					sent_expl = []
+				sentences_expl = []
+				sent_expl = []
 
-			update_sentence_metrics(
-				sentences_expl,
-				gold_labels,
-				output_index,
-				output[0],
-				scores,
-				scores_per_label,
-				top_sent_per_label,
-				mlb,
-				item,
-				text,
-				model,
-				tokenizer,
-				threshold,
-				most_important_tokens
-			)
+				for index, id in enumerate(input_ids[0]):
+					sent_expl.append(targets_per_input_id[index, output_index].cpu().detach().numpy())
+					if id.cpu().detach().numpy() == 1012:
+						sentences_expl.append(sent_expl)
+						sent_expl = []
 
-		output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
-		if top_sent_per_label:
-			scores["faithfulness_all_top_1"].append(calc_output_diff_all_top1(output[0], output_indexes, text, top_sent_per_label, model, tokenizer))
+					scores, scores_per_label = update_sentence_metrics(
+						sentences_expl,
+						gold_labels,
+						output_index,
+						output[0],
+						scores_per_threshold[threshold_index],
+						scores_per_label_per_threshold[threshold_index],
+						top_sent_per_label,
+						mlb,
+						item,
+						text,
+						model,
+						tokenizer,
+						threshold / 10,
+						most_important_tokens
+					)
 
-	scores["faithfulness"] = np.mean(scores["faithfulness"])
-	scores["faithfulness_top1"] = np.mean(scores["faithfulness_top1"])
-	scores["faithfulness_all_top_1"] = np.mean(scores["faithfulness_all_top_1"])
-	print_metrics(scores, scores_per_label, topics)
+					scores_per_threshold[threshold_index] = scores
+					scores_per_label_per_threshold[threshold_index] = scores_per_label
+
+			output_indexes = [output_index for output_index in output_indexes if output_index in gold_indexes]
+			if top_sent_per_label:
+				scores_per_threshold[threshold_index]["faithfulness_all_top_1"].append(
+					calc_output_diff_all_top1(output, output_indexes, text, top_sent_per_label, model, tokenizer))
+
+	for threshold_index, threshold in enumerate(range(9, 0, -1)):
+		print("Results for threshold: ", threshold / 10)
+		scores_per_threshold[threshold_index]["faithfulness"] = np.mean(
+			scores_per_threshold[threshold_index]["faithfulness"])
+		scores_per_threshold[threshold_index]["faithfulness_top1"] = np.mean(
+			scores_per_threshold[threshold_index]["faithfulness_top1"])
+		scores_per_threshold[threshold_index]["faithfulness_all_top_1"] = np.mean(
+			scores_per_threshold[threshold_index]["faithfulness_all_top_1"])
+		print_metrics(scores_per_threshold[threshold_index], scores_per_label_per_threshold[threshold_index], topics)
+
+
