@@ -75,8 +75,6 @@ class BertForMultiLabelSequenceClassification(BertForSequenceClassification):
             output = (logits,) + outputs[2:]
             return ((loss,) + output) if loss is not None else output
 
-
-
         return SequenceClassifierOutput(loss=loss,
                                         logits=logits,
                                         hidden_states=outputs.hidden_states,
